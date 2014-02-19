@@ -15,7 +15,17 @@
 
 // USER-CONFIGURABLE VARIABLES
 // -------------------------------------------------
-float targetRelativeHumidity = 30.0f;
+float humiditySetpoint = 30.0f;
+float humidityNecessityCoeff = 1.0;  // Unit-less, coefficient for balancing humidity needs with temperature needs
+//float humidityDriftAbove = 1.0f;
+//float humidityDriftBelow = 1.0f;
+
+float temperatureSetpoint = 21.111f;
+float temperatureNecessityCoeff = 0.75;  // Unit-less, coefficient for balancing humidity needs with temperature needs
+//float temperatureDriftAbove = 1.0f;
+//float temperatureDriftBelow = 1.0f;
+
+float ventingNecessityThreshold = 2.0f;  // Unit-less, takes into account balancing humidity and temperature setpoint targets
 
 // GLOBAL VARIABLES
 // -------------------------------------------------
@@ -88,6 +98,30 @@ void loop() {
 }
 
 
+// CLIMATE STATE MACHINE CALLBACKS
+// ----------------------------------------------------
+
+void didEnterSteadyState(int fromState, int toState) {
+  
+  ventDoorServo.write(VENT_DOOR_CLOSED);
+}
+
+void didLeaveSteadyState(int fromState, int toState) {
+  
+  // NO-OP
+}
+
+void didEnterDecreasingHumidityState(int fromState, int toState) {
+  
+  ventDoorServo.write(VENT_DOOR_OPEN);
+}
+
+void didLeaveDecreasingHumidityState(int fromState, int toState) {
+  
+  ventDoorServo.write(VENT_DOOR_CLOSED);
+}
+
+
 // BREAKOUT
 // ----------------------------------------------------
 void setupClimateStateMachine() {
@@ -96,6 +130,7 @@ void setupClimateStateMachine() {
   climateStateMachine.setCanTransition(ClimateStateDecreasingHumidity, ClimateStateSteady, true);
   
   climateStateMachine.setDidEnterHandler(ClimateStateSteady, didEnterSteadyState);
+  climateStateMachine.setDidLeaveHandler(ClimateStateSteady, didLeaveSteadyState);
   
   climateStateMachine.setDidEnterHandler(ClimateStateDecreasingHumidity, didEnterDecreasingHumidityState);
   climateStateMachine.setDidLeaveHandler(ClimateStateDecreasingHumidity, didLeaveDecreasingHumidityState);
@@ -132,34 +167,33 @@ void performMeasurements() {
 
 void analyzeSystemState() {
   
-  if (interiorHoneywell.humidity > targetRelativeHumidity && interiorHoneywell.humidity > exteriorHoneywell.humidity) {
+//  boolean canDecreaseHumidity = (interiorHoneywell.humidity > exteriorHoneywell.humidity);  // By opening vent
+//  boolean canIncreaseHumidity = (interiorHoneywell.humidity < exteriorHoneywell.humidity);  // By opening vent
+//  
+//  boolean canDecreaseTemperature = (interiorHoneywell.temperature > exteriorHoneywell.temperature);  // By opening vent
+//  boolean canIncreaseTemperature = (interiorHoneywell.temperature < exteriorHoneywell.temperature);  // By opening vent
+
+  float humidityDeviation = interiorHoneywell.humidity - humiditySetpoint;  // + when interior is too humid
+  float temperatureDeviation = interiorHoneywell.temperature - temperatureSetpoint; // + when interior is too warm
+
+  float humidityDelta = interiorHoneywell.humidity - exteriorHoneywell.humidity;  // + when interior is more humid than exterior
+  float temperatureDelta = interiorHoneywell.temperature - exteriorHoneywell.temperature;  // + when interior is warmer than exterior
+  
+  // Example H(i) = 31%, H(o) = 28.5%, H(s) = 30.0, T(i) = 22.3, T(o) = 21.9, T(s) = 23.0
+  //    2.22             = ( 1.0                   * 2.5           * 1.0              ) + ( 1.0                      * 0.4              * -0.7                )
+  float ventingNecessity = (humidityNecessityCoeff * humidityDelta * humidityDeviation) + (temperatureNecessityCoeff * temperatureDelta * temperatureDeviation);
+  
+  Serial.print("Venting necessity = ");
+  Serial.println(ventingNecessity);
+  
+//  if (interiorHoneywell.humidity > humiditySetpoint && interiorHoneywell.humidity > exteriorHoneywell.humidity) {
+  if (ventingNecessity >= ventingNecessityThreshold) {
     
     climateStateMachine.transitionToState(ClimateStateDecreasingHumidity);
     
   } else climateStateMachine.transitionToState(ClimateStateSteady);
   
 }
-
-
-
-// CLIMATE STATE MACHINE CALLBACKS
-// ----------------------------------------------------
-
-void didEnterSteadyState(int fromState, int toState) {
-  
-  ventDoorServo.write(VENT_DOOR_CLOSED);
-}
-
-void didEnterDecreasingHumidityState(int fromState, int toState) {
-  
-  ventDoorServo.write(VENT_DOOR_OPEN);
-}
-
-void didLeaveDecreasingHumidityState(int fromState, int toState) {
-  
-  ventDoorServo.write(VENT_DOOR_CLOSED);
-}
-
 
 // BLUETOOTH LE
 // ----------------------------------------------------
