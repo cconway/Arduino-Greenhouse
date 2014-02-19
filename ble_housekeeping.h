@@ -277,13 +277,17 @@ void aci_loop()
 
     case ACI_EVT_PIPE_STATUS:
 //      Serial.println(F("BLE pipe status changed"));
-
-      if (lib_aci_is_pipe_available(&aci_state, PIPE_CUSTOM_THERMOMETER_TEMPERATURE_TX) && (false == timing_change_done))
-      {
-        lib_aci_change_timing_GAP_PPCP(); // change the timing on the link as specified in the nRFgo studio -> nRF8001 conf. -> GAP. 
-        // Used to increase or decrease bandwidth
-        timing_change_done = true;
-      }
+     
+     // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+     // TO-DO: Re-enable this with a correct PIPE
+     // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+     
+//      if (lib_aci_is_pipe_available(&aci_state, PIPE_CUSTOM_THERMOMETER_TEMPERATURE_TX) && (false == timing_change_done))
+//      {
+//        lib_aci_change_timing_GAP_PPCP(); // change the timing on the link as specified in the nRFgo studio -> nRF8001 conf. -> GAP. 
+//        // Used to increase or decrease bandwidth
+//        timing_change_done = true;
+//      }
 
       break;
 

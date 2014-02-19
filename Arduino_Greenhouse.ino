@@ -17,15 +17,12 @@
 // -------------------------------------------------
 float humiditySetpoint = 30.0f;
 float humidityNecessityCoeff = 1.0;  // Unit-less, coefficient for balancing humidity needs with temperature needs
-//float humidityDriftAbove = 1.0f;
-//float humidityDriftBelow = 1.0f;
 
 float temperatureSetpoint = 21.111f;
 float temperatureNecessityCoeff = 0.75;  // Unit-less, coefficient for balancing humidity needs with temperature needs
-//float temperatureDriftAbove = 1.0f;
-//float temperatureDriftBelow = 1.0f;
 
-float ventingNecessityThreshold = 2.0f;  // Unit-less, takes into account balancing humidity and temperature setpoint targets
+float ventingNecessityThreshold = 8.0f;  // Unit-less, takes into account balancing humidity and temperature setpoint targets
+float ventingNecessityOvershoot = 25.0f;  // Percent of ventingNecessityThreshold to overshoot by to reduce frequency of cycling
 
 // GLOBAL VARIABLES
 // -------------------------------------------------
@@ -100,7 +97,6 @@ void loop() {
 
 // CLIMATE STATE MACHINE CALLBACKS
 // ----------------------------------------------------
-
 void didEnterSteadyState(int fromState, int toState) {
   
   ventDoorServo.write(VENT_DOOR_CLOSED);
@@ -125,6 +121,8 @@ void didLeaveDecreasingHumidityState(int fromState, int toState) {
 // BREAKOUT
 // ----------------------------------------------------
 void setupClimateStateMachine() {
+  
+  // NOTE: Still need to figure out how to handle cases where handler fn isn't set without crashing!!!
   
   climateStateMachine.setCanTransition(ClimateStateSteady, ClimateStateDecreasingHumidity, true);
   climateStateMachine.setCanTransition(ClimateStateDecreasingHumidity, ClimateStateSteady, true);
@@ -186,12 +184,48 @@ void analyzeSystemState() {
   Serial.print("Venting necessity = ");
   Serial.println(ventingNecessity);
   
+  switch ( climateStateMachine.getCurrentState() ) {
+    
+    case ClimateStateSteady: {
+      
+      if (ventingNecessity >= ventingNecessityThreshold) {  // Trigger right at the threshold
+        
+        climateStateMachine.transitionToState(ClimateStateDecreasingHumidity);
+      }
+      
+      break;
+    }
+    
+    case ClimateStateDecreasingHumidity: {
+      
+      float targetVentingNecessity = (ventingNecessityThreshold * (1 - (ventingNecessityOvershoot / 100.0)));
+      
+      Serial.print("Target venting necessity = ");
+      Serial.println(targetVentingNecessity);
+      
+      if (ventingNecessity <= targetVentingNecessity) {  // Trigger right at the threshold
+        
+        climateStateMachine.transitionToState(ClimateStateSteady);
+      }
+      
+      break;
+    }
+    
+    default: {
+      
+      climateStateMachine.transitionToState(ClimateStateSteady);
+      
+      break;
+    }
+  }
+  
+  
 //  if (interiorHoneywell.humidity > humiditySetpoint && interiorHoneywell.humidity > exteriorHoneywell.humidity) {
-  if (ventingNecessity >= ventingNecessityThreshold) {
-    
-    climateStateMachine.transitionToState(ClimateStateDecreasingHumidity);
-    
-  } else climateStateMachine.transitionToState(ClimateStateSteady);
+//  if (ventingNecessity >= ventingNecessityThreshold) {
+//    
+//    climateStateMachine.transitionToState(ClimateStateDecreasingHumidity);
+//    
+//  } else climateStateMachine.transitionToState(ClimateStateSteady);
   
 }
 
