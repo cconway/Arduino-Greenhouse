@@ -24,6 +24,7 @@ float temperatureNecessityCoeff = 0.75;  // Unit-less, coefficient for balancing
 float ventingNecessityThreshold = 8.0f;  // Unit-less, takes into account balancing humidity and temperature setpoint targets
 float ventingNecessityOvershoot = 25.0f;  // Percent of ventingNecessityThreshold to overshoot by to reduce frequency of cycling
 
+
 // GLOBAL VARIABLES
 // -------------------------------------------------
 
@@ -34,6 +35,7 @@ FiniteStateMachine climateStateMachine(5);  // Receives # of states to support
 int shiftRegLatchPin = 4;
 int shiftRegClockPin = 2;
 int shiftRegDataPin = 7;
+byte shiftRegisterState;
 
 // Humidity-&-Temp sensors
 HIH6100_Sensor interiorHoneywell, exteriorHoneywell;
@@ -41,6 +43,10 @@ HIH6100_Sensor interiorHoneywell, exteriorHoneywell;
 // Vent door servo
 Servo ventDoorServo;
 int ventDoorServoPin = 3;
+
+// Light banks
+int lightBank1DutyCycle = HIGH;
+int lightBank2DutyCycle = HIGH;
 
 // W.D. interrupt handler should be as short as possible, so it sets
 //   watchdogWokeUp = 1 to indicate to run-loop that watchdog timer fired
@@ -73,8 +79,8 @@ void setup (void) {
   pinMode(5, OUTPUT);
   pinMode(6, OUTPUT);
   
-  digitalWrite(5, HIGH);
-  digitalWrite(6, HIGH);
+  digitalWrite(5, lightBank1DutyCycle);
+  digitalWrite(6, lightBank2DutyCycle);
 }
 
 void loop() {
@@ -120,6 +126,34 @@ void didLeaveDecreasingHumidityState(int fromState, int toState) {
 
 // BREAKOUT
 // ----------------------------------------------------
+void updateBluetoothReadPipes() {
+  
+  // User Adjustments
+  setValueForCharacteristic(PIPE_GREENHOUSE_USER_ADJUSTMENTS_TEMPERATURE_SETPOINT_SET, temperatureSetpoint);
+  setValueForCharacteristic(PIPE_GREENHOUSE_USER_ADJUSTMENTS_HUMIDITY_SETPOINT_SET, humiditySetpoint);
+  setValueForCharacteristic(PIPE_GREENHOUSE_USER_ADJUSTMENTS_HUMIDITY_NECESSITY_COEFF_SET, humidityNecessityCoeff);
+  setValueForCharacteristic(PIPE_GREENHOUSE_USER_ADJUSTMENTS_TEMPERATURE_NECESSITY_COEFF_SET, temperatureNecessityCoeff);
+  setValueForCharacteristic(PIPE_GREENHOUSE_USER_ADJUSTMENTS_VENTING_NECESSITY_COEFF_SET, ventingNecessityThreshold);
+  setValueForCharacteristic(PIPE_GREENHOUSE_USER_ADJUSTMENTS_VENTING_NECESSITY_OVERSHOOT_SET, ventingNecessityOvershoot);
+  
+  // Climate Control State
+  setValueForCharacteristic(PIPE_GREENHOUSE_STATE_VENTING_NECESSITY_SET, temperatureSetpoint);
+  setValueForCharacteristic(PIPE_GREENHOUSE_STATE_VENTING_NECESSITY_TARGET_SET, temperatureSetpoint);
+  setValueForCharacteristic(PIPE_GREENHOUSE_STATE_CLIMATE_CONTROL_STATE_SET, climateStateMachine.getCurrentState());
+  setValueForCharacteristic(PIPE_GREENHOUSE_STATE_SHIFT_REGISTER_STATE_SET, shiftRegisterState);
+  
+  // Controls
+  setValueForCharacteristic(PIPE_GREENHOUSE_CONTROLS_LIGHT_BANK_1_DUTY_CYCLE_SET, lightBank1DutyCycle);
+  setValueForCharacteristic(PIPE_GREENHOUSE_CONTROLS_LIGHT_BANK_2_DUTY_CYCLE_SET, lightBank2DutyCycle);
+  setValueForCharacteristic(PIPE_GREENHOUSE_CONTROLS_VENT_SERVO_POSITION_SET, ventDoorServo.read());
+  
+  // Measurements
+  setValueForCharacteristic(PIPE_GREENHOUSE_MEASUREMENTS_EXTERIOR_HUMIDITY_SET, shiftRegisterState);
+  setValueForCharacteristic(PIPE_GREENHOUSE_MEASUREMENTS_EXTERIOR_TEMPERATURE_SET, shiftRegisterState);
+  setValueForCharacteristic(PIPE_GREENHOUSE_MEASUREMENTS_INTERIOR_HUMIDITY_SET, shiftRegisterState);
+  setValueForCharacteristic(PIPE_GREENHOUSE_MEASUREMENTS_INTERIOR_TEMPERATURE_SET, shiftRegisterState);
+}
+
 void setupClimateStateMachine() {
   
   // NOTE: Still need to figure out how to handle cases where handler fn isn't set without crashing!!!
