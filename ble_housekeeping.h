@@ -303,12 +303,12 @@ void aci_loop() {  // To be run at each run-loop to drive ACI comm system
        // TO-DO: Re-enable this with a correct PIPE
        // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
        
-  //      if (lib_aci_is_pipe_available(&aci_state, PIPE_CUSTOM_THERMOMETER_TEMPERATURE_TX) && (false == timing_change_done))
-  //      {
-  //        lib_aci_change_timing_GAP_PPCP(); // change the timing on the link as specified in the nRFgo studio -> nRF8001 conf. -> GAP. 
-  //        // Used to increase or decrease bandwidth
-  //        timing_change_done = true;
-  //      }
+        if (lib_aci_is_pipe_available(&aci_state, PIPE_GREENHOUSE_STATE_CLIMATE_CONTROL_STATE_TX) && (false == timing_change_done)) {
+          
+          lib_aci_change_timing_GAP_PPCP(); // change the timing on the link as specified in the nRFgo studio -> nRF8001 conf. -> GAP. 
+          // Used to increase or decrease bandwidth
+          timing_change_done = true;
+        }
   
         break;
       }

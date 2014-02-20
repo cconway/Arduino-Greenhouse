@@ -152,8 +152,8 @@ void updateBluetoothReadPipes() {
   setValueForCharacteristic(PIPE_GREENHOUSE_USER_ADJUSTMENTS_VENTING_NECESSITY_OVERSHOOT_SET, ventingNecessityOvershoot);
   
   // Climate Control State
-  setValueForCharacteristic(PIPE_GREENHOUSE_STATE_VENTING_NECESSITY_SET, temperatureSetpoint);
-  setValueForCharacteristic(PIPE_GREENHOUSE_STATE_VENTING_NECESSITY_TARGET_SET, temperatureSetpoint);
+  setValueForCharacteristic(PIPE_GREENHOUSE_STATE_VENTING_NECESSITY_SET, ventingNecessityThreshold);
+//  setValueForCharacteristic(PIPE_GREENHOUSE_STATE_VENTING_NECESSITY_TARGET_SET, 0);
   setValueForCharacteristic(PIPE_GREENHOUSE_STATE_CLIMATE_CONTROL_STATE_SET, climateStateMachine.getCurrentState());
   setValueForCharacteristic(PIPE_GREENHOUSE_STATE_SHIFT_REGISTER_STATE_SET, shiftRegisterState);
   
