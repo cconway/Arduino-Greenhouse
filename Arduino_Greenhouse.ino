@@ -110,6 +110,9 @@ void didEnterSteadyState(int fromState, int toState) {
   
   setValueForCharacteristic(PIPE_GREENHOUSE_CONTROLS_VENT_SERVO_POSITION_SET, ventDoorServo.read());
   notifyClientOfValueForCharacteristic(PIPE_GREENHOUSE_CONTROLS_VENT_SERVO_POSITION_TX, ventDoorServo.read());
+  
+  setValueForCharacteristic(PIPE_GREENHOUSE_STATE_VENTING_NECESSITY_TARGET_SET, UNAVAILABLE_f);
+  notifyClientOfValueForCharacteristic(PIPE_GREENHOUSE_STATE_VENTING_NECESSITY_TARGET_TX, UNAVAILABLE_f);
 }
 
 void didLeaveSteadyState(int fromState, int toState) {
@@ -131,6 +134,7 @@ void didLeaveDecreasingHumidityState(int fromState, int toState) {
   
   setValueForCharacteristic(PIPE_GREENHOUSE_CONTROLS_VENT_SERVO_POSITION_SET, ventDoorServo.read());
   notifyClientOfValueForCharacteristic(PIPE_GREENHOUSE_CONTROLS_VENT_SERVO_POSITION_TX, ventDoorServo.read());
+  
 }
 
 void stateChanged(int fromState, int toState) {
@@ -152,7 +156,7 @@ void updateBluetoothReadPipes() {
   setValueForCharacteristic(PIPE_GREENHOUSE_USER_ADJUSTMENTS_VENTING_NECESSITY_OVERSHOOT_SET, ventingNecessityOvershoot);
   
   // Climate Control State
-  setValueForCharacteristic(PIPE_GREENHOUSE_STATE_VENTING_NECESSITY_SET, ventingNecessityThreshold);
+//  setValueForCharacteristic(PIPE_GREENHOUSE_STATE_VENTING_NECESSITY_SET, 0);
 //  setValueForCharacteristic(PIPE_GREENHOUSE_STATE_VENTING_NECESSITY_TARGET_SET, 0);
   setValueForCharacteristic(PIPE_GREENHOUSE_STATE_CLIMATE_CONTROL_STATE_SET, climateStateMachine.getCurrentState());
   setValueForCharacteristic(PIPE_GREENHOUSE_STATE_SHIFT_REGISTER_STATE_SET, shiftRegisterState);
@@ -292,33 +296,6 @@ void analyzeSystemState() {
 
 // BLUETOOTH LE
 // ----------------------------------------------------
-void processReceivedData(uint8_t *bytes, uint8_t byteCount, uint8_t pipe) {
-  
-  switch (pipe) {
-    
-//    case PIPE_CUSTOM_THERMOMETER_ALARM_THRESHOLD_RX_ACK_AUTO: {  // Set alarm threshold value [float]
-//      
-//      if (byteCount != PIPE_CUSTOM_THERMOMETER_ALARM_THRESHOLD_RX_ACK_AUTO_MAX_SIZE) {
-//
-////        Serial.println(F("Write to Temp. Threshold value incorrect size"));
-//        
-//      } else {
-//        
-//        alarmArmed = false;
-//        
-//        thresholdTemperature = *((float *)bytes);
-//        
-////        Serial.print(F("Updating alarm threshold temp = "));
-////        Serial.println(thresholdTemperature, 2);
-//        
-//        setValueForCharacteristic(PIPE_CUSTOM_THERMOMETER_ALARM_THRESHOLD_SET, thresholdTemperature);       
-//      }
-//      
-//      break; 
-//    }
-  }
-}
-
 void handleACIEvent(aci_state_t *aci_state, aci_evt_t *aci_evt) {
   
   switch (aci_evt->evt_opcode) {  // Switch based on Event Op-Code
@@ -340,35 +317,111 @@ void handleACIEvent(aci_state_t *aci_state, aci_evt_t *aci_evt) {
       uint8_t byteCount = aci_evt->len - 2;
       uint8_t pipe = aci_evt->params.data_received.rx_data.pipe_number;
       
-      switch (pipe) {
-    
-//        case PIPE_CUSTOM_THERMOMETER_ALARM_THRESHOLD_RX_ACK_AUTO: {  // Set alarm threshold value [float]
-//          
-//          if (byteCount != PIPE_CUSTOM_THERMOMETER_ALARM_THRESHOLD_RX_ACK_AUTO_MAX_SIZE) {
-//    
-//    //        Serial.println(F("Write to Temp. Threshold value incorrect size"));
-//            
-//          } else {
-//            
-//            alarmArmed = false;
-//            
-//            thresholdTemperature = *((float *)bytes);
-//            
-//    //        Serial.print(F("Updating alarm threshold temp = "));
-//    //        Serial.println(thresholdTemperature, 2);
-//            
-//            setValueForCharacteristic(PIPE_CUSTOM_THERMOMETER_ALARM_THRESHOLD_SET, thresholdTemperature);       
-//          }
-//          
-//          break; 
-//        }
-
-      }  // end switch(pipe)
+      receivedDataFromPipe(bytes, byteCount, pipe);
       
       break;
     }
     
   }  // end switch(aci_evt->evt_opcode);
+}
+
+
+// USER-CONFIGURATION
+// ----------------------------------------------------
+boolean valueWithinLimits(float value, float minLimit, float maxLimit) {
+  
+  return (value >= minLimit && value <= maxLimit);
+}
+
+boolean receivedDataFromPipe(uint8_t *bytes, uint8_t byteCount, uint8_t pipe) {
+  
+  switch (pipe) {
+
+    case PIPE_GREENHOUSE_USER_ADJUSTMENTS_TEMPERATURE_SETPOINT_RX_ACK_AUTO: {
+      
+      if (byteCount == PIPE_GREENHOUSE_USER_ADJUSTMENTS_TEMPERATURE_SETPOINT_RX_ACK_AUTO_MAX_SIZE) {
+      
+        float floatValue = *((float *)bytes);
+        if ( valueWithinLimits(floatValue, TEMPERATURE_SETPOINT_MIN, TEMPERATURE_SETPOINT_MAX) ) {
+          
+          temperatureSetpoint = floatValue;
+          setValueForCharacteristic(PIPE_GREENHOUSE_USER_ADJUSTMENTS_TEMPERATURE_SETPOINT_SET, floatValue); 
+        }
+      }
+      break;
+    }
+    
+    case PIPE_GREENHOUSE_USER_ADJUSTMENTS_HUMIDITY_SETPOINT_RX_ACK_AUTO: {
+      
+      if (byteCount == PIPE_GREENHOUSE_USER_ADJUSTMENTS_HUMIDITY_SETPOINT_RX_ACK_AUTO_MAX_SIZE) {
+      
+        float floatValue = *((float *)bytes);
+        if ( valueWithinLimits(floatValue, HUMIDITY_SETPOINT_MIN, HUMIDITY_SETPOINT_MAX) ) {
+          
+          humiditySetpoint = floatValue;
+          setValueForCharacteristic(PIPE_GREENHOUSE_USER_ADJUSTMENTS_HUMIDITY_SETPOINT_SET, floatValue); 
+        }
+      }
+      break;
+    }
+    
+    case PIPE_GREENHOUSE_USER_ADJUSTMENTS_HUMIDITY_NECESSITY_COEFF_RX_ACK_AUTO: {
+      
+      if (byteCount == PIPE_GREENHOUSE_USER_ADJUSTMENTS_HUMIDITY_NECESSITY_COEFF_RX_ACK_AUTO_MAX_SIZE) {
+      
+        float floatValue = *((float *)bytes);
+        if ( valueWithinLimits(floatValue, NECESSITY_COEFF_MIN, NECESSITY_COEFF_MAX) ) {
+          
+          humidityNecessityCoeff = floatValue;
+          setValueForCharacteristic(PIPE_GREENHOUSE_USER_ADJUSTMENTS_HUMIDITY_NECESSITY_COEFF_SET, floatValue); 
+        }
+      }
+      break;
+    }
+    
+    case PIPE_GREENHOUSE_USER_ADJUSTMENTS_TEMPERATURE_NECESSITY_COEFF_RX_ACK_AUTO: {
+      
+      if (byteCount == PIPE_GREENHOUSE_USER_ADJUSTMENTS_TEMPERATURE_NECESSITY_COEFF_RX_ACK_AUTO_MAX_SIZE) {
+      
+        float floatValue = *((float *)bytes);
+        if ( valueWithinLimits(floatValue, NECESSITY_COEFF_MIN, NECESSITY_COEFF_MAX) ) {
+          
+          temperatureNecessityCoeff = floatValue;
+          setValueForCharacteristic(PIPE_GREENHOUSE_USER_ADJUSTMENTS_TEMPERATURE_NECESSITY_COEFF_SET, floatValue); 
+        }
+      }
+      break;
+    }
+    
+    case PIPE_GREENHOUSE_USER_ADJUSTMENTS_VENTING_NECESSITY_COEFF_RX_ACK_AUTO: {
+      
+      if (byteCount == PIPE_GREENHOUSE_USER_ADJUSTMENTS_VENTING_NECESSITY_COEFF_RX_ACK_AUTO_MAX_SIZE) {
+      
+        float floatValue = *((float *)bytes);
+        if ( valueWithinLimits(floatValue, NECESSITY_THRESHOLD_MIN, NECESSITY_THRESHOLD_MAX) ) {
+          
+          ventingNecessityThreshold = floatValue;
+          setValueForCharacteristic(PIPE_GREENHOUSE_USER_ADJUSTMENTS_VENTING_NECESSITY_COEFF_SET, floatValue); 
+        }
+      }
+      break;
+    }
+    
+    case PIPE_GREENHOUSE_USER_ADJUSTMENTS_VENTING_NECESSITY_OVERSHOOT_RX_ACK_AUTO: {
+      
+      if (byteCount == PIPE_GREENHOUSE_USER_ADJUSTMENTS_VENTING_NECESSITY_OVERSHOOT_RX_ACK_AUTO_MAX_SIZE) {
+      
+        float floatValue = *((float *)bytes);
+        if ( valueWithinLimits(floatValue, VENTING_OVERSHOOT_MIN, VENTING_OVERSHOOT_MAX) ) {
+          
+          ventingNecessityOvershoot = floatValue;
+          setValueForCharacteristic(PIPE_GREENHOUSE_USER_ADJUSTMENTS_VENTING_NECESSITY_OVERSHOOT_SET, floatValue); 
+        }
+      }
+      break;
+    }
+
+  }  // end switch(pipe)
 }
 
 // MEASUREMENT
