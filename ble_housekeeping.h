@@ -186,8 +186,8 @@ void ble_setup() {
   //If the RESET line is not available we call the ACI Radio Reset to soft reset the nRF8001
   //then we initialize the data structures required to setup the nRF8001
   lib_aci_init(&aci_state);
-  //  delay(100);
-  //  lib_aci_radio_reset(); 
+  delay(100);
+  lib_aci_radio_reset(); 
 
   Serial.println("Completed lib_aci init");
 }
@@ -216,17 +216,17 @@ void aci_loop()
     case ACI_EVT_DEVICE_STARTED:
       {          
         aci_state.data_credit_total = aci_evt->params.device_started.credit_available;
-        switch(aci_evt->params.device_started.device_mode)
-        {
-        case ACI_DEVICE_SETUP:
+        switch(aci_evt->params.device_started.device_mode) {
+          
+         case ACI_DEVICE_SETUP:
           /**
            * When the device is in the setup mode
            */
           Serial.println(F("BLE device in setup mode"));
-          if (ACI_STATUS_TRANSACTION_COMPLETE != do_aci_setup(&aci_state))
-          {
+          if (do_aci_setup(&aci_state) != ACI_STATUS_TRANSACTION_COMPLETE) {
             Serial.println(F("Error in ACI Setup"));
           }
+          
           break;
 
         case ACI_DEVICE_STANDBY:
@@ -329,6 +329,7 @@ void aci_loop()
       break;
 
     case ACI_EVT_PIPE_ERROR:
+    
       //See the appendix in the nRF8001 Product Specication for details on the error codes
       Serial.print(F("ACI Evt Pipe Error: Pipe #:"));
       Serial.print(aci_evt->params.pipe_error.pipe_number, DEC);
@@ -385,6 +386,13 @@ void setValueForCharacteristic(uint8_t pipe, uint8_t value) {
   waitForACIResponse();
 }
 
+void setValueForCharacteristic(uint8_t pipe, int value) {
+  
+  setValueForCharacteristic(pipe, (uint8_t) value);
+}
+
+
+
 boolean writeBufferToPipe(uint8_t *buffer, uint8_t byteCount, uint8_t pipe) {
   
   bool success = false;
@@ -422,4 +430,7 @@ boolean notifyClientOfValueForCharacteristic(uint8_t pipe, uint8_t value) {
   return writeBufferToPipe((uint8_t *) &value, sizeof(uint8_t), pipe);
 }
 
-
+boolean notifyClientOfValueForCharacteristic(uint8_t pipe, int value) {
+  
+  return notifyClientOfValueForCharacteristic(pipe, (uint8_t) value);
+}

@@ -18,6 +18,8 @@ class FiniteStateMachine {
     void setWillEnterHandler(int state, FSM_HandlerFn handlerFn);
     void setDidEnterHandler(int state, FSM_HandlerFn handlerFn);
     
+    FSM_HandlerFn stateChangedHandler;
+    
   private:
     int _stateCount;
     int _currentState;

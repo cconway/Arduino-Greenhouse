@@ -53,6 +53,8 @@ boolean FiniteStateMachine::transitionToState(int toState) {
     if (toState == _currentState) return true;
     else {
     
+       int originalState = _currentState;
+      
       // Run pre-state transition handlers
 //      if (_willLeaveHandlers[_currentState]) _willLeaveHandlers[_currentState](_currentState, toState);
 //      if (_willEnterHandlers[_currentState]) _willEnterHandlers[_currentState](_currentState, toState);
@@ -63,6 +65,8 @@ boolean FiniteStateMachine::transitionToState(int toState) {
       // Run post-state transition handlers
       if (_didLeaveHandlers[_currentState]) _didLeaveHandlers[_currentState](_currentState, toState);
       if (_didEnterHandlers[_currentState]) _didEnterHandlers[_currentState](_currentState, toState);
+      
+      stateChangedHandler(originalState, toState);
     
       return true;
       

@@ -25,6 +25,14 @@ float ventingNecessityThreshold = 8.0f;  // Unit-less, takes into account balanc
 float ventingNecessityOvershoot = 25.0f;  // Percent of ventingNecessityThreshold to overshoot by to reduce frequency of cycling
 
 
+// CURRENT STATE
+// -------------------------------------------------
+//float currentInteriorTemperature;
+//float currentExteriorTemperature;
+//float currentInteriorHumidity;
+//float currentExteriorHumidity;
+
+
 // GLOBAL VARIABLES
 // -------------------------------------------------
 
@@ -55,9 +63,6 @@ volatile int watchdogWokeUp = 0;
 
 void setup (void) {
   
-  // Initiate our measurement trigger
-  startWatchdogTimer();
-  
   Serial.begin(115200);
   while(!Serial) {}  //  Wait until the serial port is available (useful only for the leonardo)
   Serial.println(F("Serial logging enabled"));
@@ -65,6 +70,9 @@ void setup (void) {
   // Configure Bluetooth LE support
   setDataReceivedCallbackFn(&processReceivedData);  // Pass our callback fn to the ble_housekeeping library
   ble_setup();
+  
+  // Initiate our measurement trigger
+  startWatchdogTimer();
   
   // Configure State Machine
   setupClimateStateMachine();
@@ -81,6 +89,9 @@ void setup (void) {
   
   digitalWrite(5, lightBank1DutyCycle);
   digitalWrite(6, lightBank2DutyCycle);
+    
+  // Copy intial values into BLE board
+  updateBluetoothReadPipes();
 }
 
 void loop() {
@@ -106,6 +117,9 @@ void loop() {
 void didEnterSteadyState(int fromState, int toState) {
   
   ventDoorServo.write(VENT_DOOR_CLOSED);
+  
+  setValueForCharacteristic(PIPE_GREENHOUSE_CONTROLS_VENT_SERVO_POSITION_SET, ventDoorServo.read());
+  notifyClientOfValueForCharacteristic(PIPE_GREENHOUSE_CONTROLS_VENT_SERVO_POSITION_TX, ventDoorServo.read());
 }
 
 void didLeaveSteadyState(int fromState, int toState) {
@@ -116,13 +130,24 @@ void didLeaveSteadyState(int fromState, int toState) {
 void didEnterDecreasingHumidityState(int fromState, int toState) {
   
   ventDoorServo.write(VENT_DOOR_OPEN);
+  
+  setValueForCharacteristic(PIPE_GREENHOUSE_CONTROLS_VENT_SERVO_POSITION_SET, ventDoorServo.read());
+  notifyClientOfValueForCharacteristic(PIPE_GREENHOUSE_CONTROLS_VENT_SERVO_POSITION_TX, ventDoorServo.read());
 }
 
 void didLeaveDecreasingHumidityState(int fromState, int toState) {
   
   ventDoorServo.write(VENT_DOOR_CLOSED);
+  
+  setValueForCharacteristic(PIPE_GREENHOUSE_CONTROLS_VENT_SERVO_POSITION_SET, ventDoorServo.read());
+  notifyClientOfValueForCharacteristic(PIPE_GREENHOUSE_CONTROLS_VENT_SERVO_POSITION_TX, ventDoorServo.read());
 }
 
+void stateChanged(int fromState, int toState) {
+  
+  setValueForCharacteristic(PIPE_GREENHOUSE_STATE_CLIMATE_CONTROL_STATE_SET, toState);
+  notifyClientOfValueForCharacteristic(PIPE_GREENHOUSE_STATE_CLIMATE_CONTROL_STATE_TX, toState);
+}
 
 // BREAKOUT
 // ----------------------------------------------------
@@ -148,10 +173,10 @@ void updateBluetoothReadPipes() {
   setValueForCharacteristic(PIPE_GREENHOUSE_CONTROLS_VENT_SERVO_POSITION_SET, ventDoorServo.read());
   
   // Measurements
-  setValueForCharacteristic(PIPE_GREENHOUSE_MEASUREMENTS_EXTERIOR_HUMIDITY_SET, shiftRegisterState);
-  setValueForCharacteristic(PIPE_GREENHOUSE_MEASUREMENTS_EXTERIOR_TEMPERATURE_SET, shiftRegisterState);
-  setValueForCharacteristic(PIPE_GREENHOUSE_MEASUREMENTS_INTERIOR_HUMIDITY_SET, shiftRegisterState);
-  setValueForCharacteristic(PIPE_GREENHOUSE_MEASUREMENTS_INTERIOR_TEMPERATURE_SET, shiftRegisterState);
+//  setValueForCharacteristic(PIPE_GREENHOUSE_MEASUREMENTS_EXTERIOR_HUMIDITY_SET, shiftRegisterState);
+//  setValueForCharacteristic(PIPE_GREENHOUSE_MEASUREMENTS_EXTERIOR_TEMPERATURE_SET, shiftRegisterState);
+//  setValueForCharacteristic(PIPE_GREENHOUSE_MEASUREMENTS_INTERIOR_HUMIDITY_SET, shiftRegisterState);
+//  setValueForCharacteristic(PIPE_GREENHOUSE_MEASUREMENTS_INTERIOR_TEMPERATURE_SET, shiftRegisterState);
 }
 
 void setupClimateStateMachine() {
@@ -166,6 +191,8 @@ void setupClimateStateMachine() {
   
   climateStateMachine.setDidEnterHandler(ClimateStateDecreasingHumidity, didEnterDecreasingHumidityState);
   climateStateMachine.setDidLeaveHandler(ClimateStateDecreasingHumidity, didLeaveDecreasingHumidityState);
+  
+  climateStateMachine.stateChangedHandler = stateChanged;
   
   climateStateMachine.initialize();
 }
@@ -184,26 +211,36 @@ void performMeasurements() {
   
   // Check Temp & Humidity inside and out
   // ---------------------------------------
+  
+  // Exterior
   enableHoneywellSensor(HoneywellSensorExterior);
   delay(50);  // Allow sensor to wakeup
   exteriorHoneywell.performMeasurement();
   exteriorHoneywell.printStatus();
   
+  setValueForCharacteristic(PIPE_GREENHOUSE_MEASUREMENTS_EXTERIOR_HUMIDITY_SET, exteriorHoneywell.humidity);
+  notifyClientOfValueForCharacteristic(PIPE_GREENHOUSE_MEASUREMENTS_EXTERIOR_HUMIDITY_TX, exteriorHoneywell.humidity);
+  
+  setValueForCharacteristic(PIPE_GREENHOUSE_MEASUREMENTS_EXTERIOR_TEMPERATURE_SET, exteriorHoneywell.temperature);
+  notifyClientOfValueForCharacteristic(PIPE_GREENHOUSE_MEASUREMENTS_EXTERIOR_TEMPERATURE_TX, exteriorHoneywell.temperature);
+  
+  // Interior
   enableHoneywellSensor(HoneywellSensorInterior);
   delay(50);  // Allow sensor to wakeup
   interiorHoneywell.performMeasurement();
   interiorHoneywell.printStatus();
   
+  setValueForCharacteristic(PIPE_GREENHOUSE_MEASUREMENTS_INTERIOR_HUMIDITY_SET, interiorHoneywell.humidity);
+  notifyClientOfValueForCharacteristic(PIPE_GREENHOUSE_MEASUREMENTS_INTERIOR_HUMIDITY_TX, interiorHoneywell.humidity);
+  
+  setValueForCharacteristic(PIPE_GREENHOUSE_MEASUREMENTS_INTERIOR_TEMPERATURE_SET, interiorHoneywell.temperature);
+  notifyClientOfValueForCharacteristic(PIPE_GREENHOUSE_MEASUREMENTS_INTERIOR_TEMPERATURE_TX, interiorHoneywell.temperature);
+  
+  // Cleanup
   enableHoneywellSensor(HoneywellSensorNone);
 }
 
 void analyzeSystemState() {
-  
-//  boolean canDecreaseHumidity = (interiorHoneywell.humidity > exteriorHoneywell.humidity);  // By opening vent
-//  boolean canIncreaseHumidity = (interiorHoneywell.humidity < exteriorHoneywell.humidity);  // By opening vent
-//  
-//  boolean canDecreaseTemperature = (interiorHoneywell.temperature > exteriorHoneywell.temperature);  // By opening vent
-//  boolean canIncreaseTemperature = (interiorHoneywell.temperature < exteriorHoneywell.temperature);  // By opening vent
 
   float humidityDeviation = interiorHoneywell.humidity - humiditySetpoint;  // + when interior is too humid
   float temperatureDeviation = interiorHoneywell.temperature - temperatureSetpoint; // + when interior is too warm
@@ -217,6 +254,10 @@ void analyzeSystemState() {
   
   Serial.print("Venting necessity = ");
   Serial.println(ventingNecessity);
+  
+  setValueForCharacteristic(PIPE_GREENHOUSE_STATE_VENTING_NECESSITY_SET, ventingNecessity);
+  notifyClientOfValueForCharacteristic(PIPE_GREENHOUSE_STATE_VENTING_NECESSITY_TX, ventingNecessity);
+  
   
   switch ( climateStateMachine.getCurrentState() ) {
     
@@ -237,6 +278,11 @@ void analyzeSystemState() {
       Serial.print("Target venting necessity = ");
       Serial.println(targetVentingNecessity);
       
+      
+      setValueForCharacteristic(PIPE_GREENHOUSE_STATE_VENTING_NECESSITY_TARGET_SET, targetVentingNecessity);
+      notifyClientOfValueForCharacteristic(PIPE_GREENHOUSE_STATE_VENTING_NECESSITY_TARGET_TX, targetVentingNecessity);
+      
+      
       if (ventingNecessity <= targetVentingNecessity) {  // Trigger right at the threshold
         
         climateStateMachine.transitionToState(ClimateStateSteady);
@@ -252,15 +298,6 @@ void analyzeSystemState() {
       break;
     }
   }
-  
-  
-//  if (interiorHoneywell.humidity > humiditySetpoint && interiorHoneywell.humidity > exteriorHoneywell.humidity) {
-//  if (ventingNecessity >= ventingNecessityThreshold) {
-//    
-//    climateStateMachine.transitionToState(ClimateStateDecreasingHumidity);
-//    
-//  } else climateStateMachine.transitionToState(ClimateStateSteady);
-  
 }
 
 // BLUETOOTH LE
@@ -310,6 +347,11 @@ void enableHoneywellSensor(HoneywellSensor sensorID) {
    digitalWrite(shiftRegLatchPin, LOW);
    shiftOut(shiftRegDataPin, shiftRegClockPin, LSBFIRST, enabledOutputs);
    digitalWrite(shiftRegLatchPin, HIGH);
+   
+   shiftRegisterState = enabledOutputs;
+   
+   setValueForCharacteristic(PIPE_GREENHOUSE_STATE_SHIFT_REGISTER_STATE_SET, shiftRegisterState);
+   notifyClientOfValueForCharacteristic(PIPE_GREENHOUSE_STATE_SHIFT_REGISTER_STATE_TX, shiftRegisterState);
 }
 
 

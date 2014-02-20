@@ -377,7 +377,7 @@
         </Characteristic>
     </Service>
     <Gapsettings>
-        <Name>CHAS</Name>
+        <Name></Name>
         <DeviceNameWriteLength>0</DeviceNameWriteLength>
         <LocalPipeOnDeviceName>false</LocalPipeOnDeviceName>
         <DeviceNameShortLength>0</DeviceNameShortLength>
@@ -390,7 +390,7 @@
         <MinimumKeySize>7</MinimumKeySize>
         <MaximumKeySize>16</MaximumKeySize>
         <AdvertisingDataBondedBitmap>10</AdvertisingDataBondedBitmap>
-        <AdvertisingDataGeneralBitmap>1a</AdvertisingDataGeneralBitmap>
+        <AdvertisingDataGeneralBitmap>a</AdvertisingDataGeneralBitmap>
         <AdvertisingDataBrodcastBitmap>10</AdvertisingDataBrodcastBitmap>
         <AdvertisingDataBondedScanResponseBitmap>0</AdvertisingDataBondedScanResponseBitmap>
         <AdvertisingDataGeneralScanResponseBitmap>0</AdvertisingDataGeneralScanResponseBitmap>
@@ -414,7 +414,7 @@
         <CustomAdTypes>
             <AdType index="1">
                 <Type>19</Type>
-                <Value>8000</Value>
+                <Value></Value>
             </AdType>
             <AdType index="2">
                 <Type>18</Type>
