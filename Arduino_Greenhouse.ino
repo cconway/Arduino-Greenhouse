@@ -25,14 +25,6 @@ float ventingNecessityThreshold = 8.0f;  // Unit-less, takes into account balanc
 float ventingNecessityOvershoot = 25.0f;  // Percent of ventingNecessityThreshold to overshoot by to reduce frequency of cycling
 
 
-// CURRENT STATE
-// -------------------------------------------------
-//float currentInteriorTemperature;
-//float currentExteriorTemperature;
-//float currentInteriorHumidity;
-//float currentExteriorHumidity;
-
-
 // GLOBAL VARIABLES
 // -------------------------------------------------
 
@@ -68,7 +60,8 @@ void setup (void) {
   Serial.println(F("Serial logging enabled"));
   
   // Configure Bluetooth LE support
-  setDataReceivedCallbackFn(&processReceivedData);  // Pass our callback fn to the ble_housekeeping library
+//  setDataReceivedCallbackFn(&processReceivedData);  // Pass our callback fn to the ble_housekeeping library
+  setACIPostEventHandler(handleACIEvent);
   ble_setup();
   
   // Initiate our measurement trigger
@@ -89,9 +82,6 @@ void setup (void) {
   
   digitalWrite(5, lightBank1DutyCycle);
   digitalWrite(6, lightBank2DutyCycle);
-    
-  // Copy intial values into BLE board
-  updateBluetoothReadPipes();
 }
 
 void loop() {
@@ -329,6 +319,57 @@ void processReceivedData(uint8_t *bytes, uint8_t byteCount, uint8_t pipe) {
   }
 }
 
+void handleACIEvent(aci_state_t *aci_state, aci_evt_t *aci_evt) {
+  
+  switch (aci_evt->evt_opcode) {  // Switch based on Event Op-Code
+  
+    case ACI_EVT_DEVICE_STARTED: {  // As soon as you reset the nRF8001 you will get an ACI Device Started Event
+    
+      if (aci_evt->params.device_started.device_mode == ACI_DEVICE_STANDBY) {
+        
+        // Copy intial values into BLE board
+        updateBluetoothReadPipes();
+      }
+    
+      break;
+    }
+  
+    case ACI_EVT_DATA_RECEIVED: {  // One of the writeable pipes (for a Characteristic) has received data
+      
+      uint8_t *bytes = &aci_evt->params.data_received.rx_data.aci_data[0];
+      uint8_t byteCount = aci_evt->len - 2;
+      uint8_t pipe = aci_evt->params.data_received.rx_data.pipe_number;
+      
+      switch (pipe) {
+    
+//        case PIPE_CUSTOM_THERMOMETER_ALARM_THRESHOLD_RX_ACK_AUTO: {  // Set alarm threshold value [float]
+//          
+//          if (byteCount != PIPE_CUSTOM_THERMOMETER_ALARM_THRESHOLD_RX_ACK_AUTO_MAX_SIZE) {
+//    
+//    //        Serial.println(F("Write to Temp. Threshold value incorrect size"));
+//            
+//          } else {
+//            
+//            alarmArmed = false;
+//            
+//            thresholdTemperature = *((float *)bytes);
+//            
+//    //        Serial.print(F("Updating alarm threshold temp = "));
+//    //        Serial.println(thresholdTemperature, 2);
+//            
+//            setValueForCharacteristic(PIPE_CUSTOM_THERMOMETER_ALARM_THRESHOLD_SET, thresholdTemperature);       
+//          }
+//          
+//          break; 
+//        }
+
+      }  // end switch(pipe)
+      
+      break;
+    }
+    
+  }  // end switch(aci_evt->evt_opcode);
+}
 
 // MEASUREMENT
 // ----------------------------------------------------

@@ -90,6 +90,8 @@ Description:
  * This would mean that the setup cannot be changed once put in.
  * However this removes the need to do the setup of the nRF8001 on every reset.
  */
+ 
+typedef void (*ACIPostEventHandler)(aci_state_t *aci_state, aci_evt_t *aci_evt);
 
 
 #ifdef SERVICES_PIPE_TYPE_MAPPING_CONTENT
@@ -115,6 +117,8 @@ static hal_aci_data_t setup_msgs[NB_SETUP_MESSAGES] PROGMEM = SETUP_MESSAGES_CON
 // Current State of the the GATT client (Service Discovery)
 // Status of the bond (R) Peer address
 static struct aci_state_t aci_state;
+
+ACIPostEventHandler postEventHandlerFn;
 
 /*
 Temporary buffers for sending ACI commands
@@ -193,163 +197,195 @@ void ble_setup() {
 }
 
 // Store a callback fn set from another library for handling received data
-void (*dataReceivedCallback)(uint8_t *bytes, uint8_t byteCount, uint8_t pipe);
+//void (*dataReceivedCallback)(uint8_t *bytes, uint8_t byteCount, uint8_t pipe);
+//
+//void setDataReceivedCallbackFn( void (*callbackFn)(uint8_t *bytes, uint8_t byteCount, uint8_t pipe) ) {
+//  
+//  dataReceivedCallback = callbackFn; 
+//}
 
-void setDataReceivedCallbackFn( void (*callbackFn)(uint8_t *bytes, uint8_t byteCount, uint8_t pipe) ) {
+void setACIPostEventHandler(ACIPostEventHandler handlerFn) {
   
-   dataReceivedCallback = callbackFn; 
+  postEventHandlerFn = handlerFn;
 }
 
-void aci_loop()
-{
+void aci_loop() {  // To be run at each run-loop to drive ACI comm system
+  
   // We enter the if statement only when there is a ACI event available to be processed
-  if (lib_aci_event_get(&aci_state, &aci_data))
-  {
-    aci_evt_t * aci_evt;
+  if (lib_aci_event_get(&aci_state, &aci_data)) {
+    
+    // Extract the ACI Event
+    aci_evt_t *aci_evt = &aci_data.evt;
+    
+    switch (aci_evt->evt_opcode) {  // Switch based on Event Op-Code
 
-    aci_evt = &aci_data.evt;    
-    switch(aci_evt->evt_opcode)
-    {
-      /**
-       * As soon as you reset the nRF8001 you will get an ACI Device Started Event
-       */
-    case ACI_EVT_DEVICE_STARTED:
-      {          
+      case ACI_EVT_DEVICE_STARTED: {  // As soon as you reset the nRF8001 you will get an ACI Device Started Event
+          
         aci_state.data_credit_total = aci_evt->params.device_started.credit_available;
+          
         switch(aci_evt->params.device_started.device_mode) {
+            
+          case ACI_DEVICE_SETUP:  // When the device is in the setup mode
+     
+            Serial.println(F("BLE device in setup mode"));
+            
+            if (do_aci_setup(&aci_state) != ACI_STATUS_TRANSACTION_COMPLETE) {
+              
+              Serial.println(F("Error in ACI Setup"));
+            }
+            
+            break;
+    
+          case ACI_DEVICE_STANDBY:
           
-         case ACI_DEVICE_SETUP:
-          /**
-           * When the device is in the setup mode
-           */
-          Serial.println(F("BLE device in setup mode"));
-          if (do_aci_setup(&aci_state) != ACI_STATUS_TRANSACTION_COMPLETE) {
-            Serial.println(F("Error in ACI Setup"));
-          }
-          
-          break;
-
-        case ACI_DEVICE_STANDBY:
-          Serial.println(F("BLE device in standby mode"));
-          //Looking for an iPhone by sending radio advertisements
-          //When an iPhone connects to us we will get an ACI_EVT_CONNECTED event from the nRF8001
-          lib_aci_connect(180/* in seconds */, 0x0050 /* advertising interval 50ms*/);
-          Serial.println(F("Beginning BLE advertisement"));
-          break;
+            Serial.println(F("BLE device in standby mode"));
+            
+            // Looking for an iPhone by sending radio advertisements
+            // When an iPhone connects to us we will get an ACI_EVT_CONNECTED event from the nRF8001
+            lib_aci_connect(180/* in seconds */, 0x0050 /* advertising interval 50ms*/);
+            Serial.println(F("Beginning BLE advertisement"));
+            
+            break;
         }
+        
+        break; //ACI Device Started Event
       }
-      break; //ACI Device Started Event
-
-    case ACI_EVT_CMD_RSP:
-      
-      aci_cmd_pending = false;
-      
-      //If an ACI command response event comes with an error -> stop
-      if (ACI_STATUS_SUCCESS != aci_evt->params.cmd_rsp.cmd_status)  // UNSUCCESSFUL
-      {
-        //ACI ReadDynamicData and ACI WriteDynamicData will have status codes of
-        //TRANSACTION_CONTINUE and TRANSACTION_COMPLETE
-        //all other ACI commands will have status code of ACI_STATUS_SCUCCESS for a successful command
-        Serial.print(F("ACI command = "));
-        Serial.print(aci_evt->params.cmd_rsp.cmd_opcode, HEX);
-        Serial.print(F(" failed with status = "));
-        Serial.println(aci_evt->params.cmd_rsp.cmd_status, HEX);
-      
-      } else {  // SUCCESSFUL
-
-//        if (aci_evt->params.cmd_rsp.cmd_opcode == ACI_CMD_SET_LOCAL_DATA) {
-//
-//          Serial.println(F("Successfully updated LOCAL data"));
-//        }
+        
+  
+      case ACI_EVT_CMD_RSP: {  // ACI comm system ACKing our last command
+        
+        aci_cmd_pending = false;
+        
+        //If an ACI command response event comes with an error, stop
+        if (aci_evt->params.cmd_rsp.cmd_status != ACI_STATUS_SUCCESS) {  // UNSUCCESSFUL
+          
+          //ACI ReadDynamicData and ACI WriteDynamicData will have status codes of
+          //TRANSACTION_CONTINUE and TRANSACTION_COMPLETE
+          //all other ACI commands will have status code of ACI_STATUS_SCUCCESS for a successful command
+          Serial.print(F("ACI command = "));
+          Serial.print(aci_evt->params.cmd_rsp.cmd_opcode, HEX);
+          Serial.print(F(" failed with status = "));
+          Serial.println(aci_evt->params.cmd_rsp.cmd_status, HEX);
+        
+        } else {  // SUCCESSFUL
+  
+  //        if (aci_evt->params.cmd_rsp.cmd_opcode == ACI_CMD_SET_LOCAL_DATA) {
+  //
+  //          Serial.println(F("Successfully updated LOCAL data"));
+  //        }
+        }
+        
+        break;
       }
-      break;
-
-    case ACI_EVT_CONNECTED:
-      Serial.println(F("BLE connected to host"));
-      timing_change_done              = false;
-      aci_state.data_credit_available = aci_state.data_credit_total;
-
-      /*
-        Get the device version of the nRF8001 and store it in the Hardware Revision String
-       */
-      lib_aci_device_version();
-      break;
-
-    case ACI_EVT_PIPE_STATUS:
-//      Serial.println(F("BLE pipe status changed"));
-     
-     // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-     // TO-DO: Re-enable this with a correct PIPE
-     // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-     
-//      if (lib_aci_is_pipe_available(&aci_state, PIPE_CUSTOM_THERMOMETER_TEMPERATURE_TX) && (false == timing_change_done))
-//      {
-//        lib_aci_change_timing_GAP_PPCP(); // change the timing on the link as specified in the nRFgo studio -> nRF8001 conf. -> GAP. 
-//        // Used to increase or decrease bandwidth
-//        timing_change_done = true;
-//      }
-
-      break;
-
-    case ACI_EVT_TIMING:
-      Serial.println(F("BLE link connection interval changed"));
-      //        lib_aci_set_local_data(&aci_state, 
-      //                                PIPE_UART_OVER_BTLE_UART_LINK_TIMING_CURRENT_SET,
-      //                                (uint8_t *)&(aci_evt->params.timing.conn_rf_interval), /* Byte aligned */
-      //                                PIPE_UART_OVER_BTLE_UART_LINK_TIMING_CURRENT_SET_MAX_SIZE);
-      break;
-
-    case ACI_EVT_DISCONNECTED:
-      Serial.println(F("BLE host disconnected or advertising session timed out"));
+  
+      case ACI_EVT_CONNECTED: {  // BLE board connected to a host
+        
+        Serial.println(F("BLE connected to host"));
+        
+        timing_change_done = false;
+        aci_state.data_credit_available = aci_state.data_credit_total;
+  
+        /*
+          Get the device version of the nRF8001 and store it in the Hardware Revision String
+         */
+        lib_aci_device_version();
+        
+        break;
+      }
+  
+      case ACI_EVT_PIPE_STATUS: {  // BLE Characteristic data pipe changed status (available/unavailable)
+        
+        // e.g. A "notify" characteristic will change it's pipe to 'available' when the host subscribes to notifications
+        
+  //      Serial.println(F("BLE pipe status changed"));
+       
+       // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+       // TO-DO: Re-enable this with a correct PIPE
+       // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+       
+  //      if (lib_aci_is_pipe_available(&aci_state, PIPE_CUSTOM_THERMOMETER_TEMPERATURE_TX) && (false == timing_change_done))
+  //      {
+  //        lib_aci_change_timing_GAP_PPCP(); // change the timing on the link as specified in the nRFgo studio -> nRF8001 conf. -> GAP. 
+  //        // Used to increase or decrease bandwidth
+  //        timing_change_done = true;
+  //      }
+  
+        break;
+      }
+  
+      case ACI_EVT_TIMING: {  // BLE board successfully changed radio timing
+        
+        Serial.println(F("BLE link connection interval changed"));
+        //        lib_aci_set_local_data(&aci_state, 
+        //                                PIPE_UART_OVER_BTLE_UART_LINK_TIMING_CURRENT_SET,
+        //                                (uint8_t *)&(aci_evt->params.timing.conn_rf_interval), /* Byte aligned */
+        //                                PIPE_UART_OVER_BTLE_UART_LINK_TIMING_CURRENT_SET_MAX_SIZE);
+        break;
+      }
+  
+      case ACI_EVT_DISCONNECTED: {  // BLE board disconnected from the host
       
-      // Automatically start advertising again after disconnecting from host or
-      //   when previous advertising session expires
-      lib_aci_connect(180/* in seconds */, 0x0100 /* advertising interval 100ms*/);
-      Serial.println(F("Beginning BLE advertisement"));       
-      break;
-
-    case ACI_EVT_DATA_RECEIVED:
-//      Serial.print(F("Pipe number "));	  
-//      Serial.print(aci_evt->params.data_received.rx_data.pipe_number, DEC);
-//      Serial.print(F(" received data with length = "));
-//      Serial.println(aci_evt->len - 2);  //Subtract for Opcode and Pipe number
+        Serial.println(F("BLE host disconnected or advertising session timed out"));
+        
+        // Automatically start advertising again after disconnecting from host or
+        //   when previous advertising session expires
+        lib_aci_connect(180/* in seconds */, 0x0100 /* advertising interval 100ms*/);
+        
+        Serial.println(F("Beginning BLE advertisement")); 
+        
+        break;
+      }
+  
+      case ACI_EVT_DATA_RECEIVED: {  // One of the writeable pipes (for a Characteristic) has received data
+        
+  //      Serial.print(F("Pipe number "));	  
+  //      Serial.print(aci_evt->params.data_received.rx_data.pipe_number, DEC);
+  //      Serial.print(F(" received data with length = "));
+  //      Serial.println(aci_evt->len - 2);  //Subtract for Opcode and Pipe number
+        
+        // Pass data to the assigned callback fn
+  //      (*dataReceivedCallback)(&aci_evt->params.data_received.rx_data.aci_data[0], aci_evt->len - 2, aci_evt->params.data_received.rx_data.pipe_number);
+  
+        break;
+      }
+  
+      case ACI_EVT_DATA_CREDIT:  {  // The application controller (that's us) earned back a data credit and can queue another transmission
       
-      // Pass data to the assigned callback fn
-      (*dataReceivedCallback)(&aci_evt->params.data_received.rx_data.aci_data[0], aci_evt->len - 2, aci_evt->params.data_received.rx_data.pipe_number);
+  //      Serial.println(F("BLE rate-limiting recieved data TX credit(s)"));
+  
+        data_credit_pending = false;
+        
+        aci_state.data_credit_available = aci_state.data_credit_available + aci_evt->params.data_credit.credit;
+        
+        break;
+      }
+  
+      case ACI_EVT_PIPE_ERROR: {  // There was an error associated with a specific pipe
+      
+        //See the appendix in the nRF8001 Product Specication for details on the error codes
+        Serial.print(F("ACI Evt Pipe Error: Pipe #:"));
+        Serial.print(aci_evt->params.pipe_error.pipe_number, DEC);
+        Serial.print(F("  Pipe Error Code: 0x"));
+        Serial.println(aci_evt->params.pipe_error.error_code, HEX);
+  
+        //Increment the credit available as the data packet was not sent.
+        //The pipe error also represents the Attribute protocol Error Response sent from the peer and that should not be counted 
+        //for the credit.
+        if (ACI_STATUS_ERROR_PEER_ATT_ERROR != aci_evt->params.pipe_error.error_code) {
+          
+          aci_state.data_credit_available++;
+        }
+        
+        break;
+      }
 
-      break;
-
-    case ACI_EVT_DATA_CREDIT:
+    }  // end switch()
+  
+    // Now run our post-event handler
+    postEventHandlerFn(&aci_state, aci_evt);
     
-//      Serial.println(F("BLE rate-limiting recieved data TX credit(s)"));
-
-      data_credit_pending = false;
-      
-      aci_state.data_credit_available = aci_state.data_credit_available + aci_evt->params.data_credit.credit;
-      break;
-
-    case ACI_EVT_PIPE_ERROR:
+  } else {  // No ACI events to get
     
-      //See the appendix in the nRF8001 Product Specication for details on the error codes
-      Serial.print(F("ACI Evt Pipe Error: Pipe #:"));
-      Serial.print(aci_evt->params.pipe_error.pipe_number, DEC);
-      Serial.print(F("  Pipe Error Code: 0x"));
-      Serial.println(aci_evt->params.pipe_error.error_code, HEX);
-
-      //Increment the credit available as the data packet was not sent.
-      //The pipe error also represents the Attribute protocol Error Response sent from the peer and that should not be counted 
-      //for the credit.
-      if (ACI_STATUS_ERROR_PEER_ATT_ERROR != aci_evt->params.pipe_error.error_code)
-      {
-        aci_state.data_credit_available++;
-      }
-      break;
-
-
-    }
-  }
-  else
-  {
     //Serial.println(F("No ACI Events available"));
     // No event in the ACI Event queue and if there is no event in the ACI command queue the arduino can go to sleep
     // Arduino can go to sleep now
@@ -397,16 +433,13 @@ boolean writeBufferToPipe(uint8_t *buffer, uint8_t byteCount, uint8_t pipe) {
   
   bool success = false;
   
-  if (lib_aci_is_pipe_available(&aci_state, pipe) && (aci_state.data_credit_available >= 1))
-  {
+  if (lib_aci_is_pipe_available(&aci_state, pipe) && (aci_state.data_credit_available >= 1)) {
     
 //    Serial.print(byteCount);
 //    Serial.println(F(" bytes sent to pipe"));
     
     success = lib_aci_send_data(pipe, buffer, byteCount);
-//    float test = 1234;
-//    uint8_t *ptr = (uint8_t *) &test;
-//    success = lib_aci_send_data(PIPE_CUSTOM_THERMOMETER_TEMPERATURE_TX, ptr, sizeof(float));
+    
     if (success) {
       
       aci_state.data_credit_available--;
