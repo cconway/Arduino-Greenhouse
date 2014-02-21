@@ -424,7 +424,9 @@ void setValueForCharacteristic(uint8_t pipe, uint8_t value) {
 
 void setValueForCharacteristic(uint8_t pipe, int value) {
   
-  setValueForCharacteristic(pipe, (uint8_t) value);
+  lib_aci_set_local_data(&aci_state, pipe, (uint8_t*) &value, sizeof(int));
+  
+  waitForACIResponse();
 }
 
 
@@ -465,5 +467,5 @@ boolean notifyClientOfValueForCharacteristic(uint8_t pipe, uint8_t value) {
 
 boolean notifyClientOfValueForCharacteristic(uint8_t pipe, int value) {
   
-  return notifyClientOfValueForCharacteristic(pipe, (uint8_t) value);
+  return writeBufferToPipe((uint8_t *) &value, sizeof(int), pipe);
 }

@@ -4,11 +4,11 @@
     <SetupId>0</SetupId>
     <Device>nRF8001_Dx</Device>
     <Service Type="local" PrimaryService="true">
-        <Name>Greenhouse User Adjustments</Name>
-        <Uuid BaseUUID="E8CC000055E30B6440F8B2F289661BDA" BaseUUIDName="Custom Thermometer">0100</Uuid>
+        <Name>Greenhouse Measurements</Name>
+        <Uuid BaseUUID="E8CC000055E30B6440F8B2F289661BDA" BaseUUIDName="Custom Thermometer">0130</Uuid>
         <Characteristic>
-            <Name>Temperature Setpoint</Name>
-            <Uuid BaseUUID="E8CC000055E30B6440F8B2F289661BDA" BaseUUIDName="Custom Thermometer">0102</Uuid>
+            <Name>Exterior Humidity</Name>
+            <Uuid BaseUUID="E8CC000055E30B6440F8B2F289661BDA" BaseUUIDName="Custom Thermometer">0133</Uuid>
             <DefaultValue></DefaultValue>
             <UsePresentationFormat>0</UsePresentationFormat>
             <MaxDataLength>4</MaxDataLength>
@@ -16,20 +16,20 @@
             <ForceOpen>false</ForceOpen>
             <Properties>
                 <WriteWithoutResponse>false</WriteWithoutResponse>
-                <Write>true</Write>
-                <Notify>false</Notify>
+                <Write>false</Write>
+                <Notify>true</Notify>
                 <Indicate>false</Indicate>
                 <Broadcast>false</Broadcast>
             </Properties>
-            <SetPipe>true</SetPipe>
+            <SetPipe>false</SetPipe>
             <AckIsAuto>false</AckIsAuto>
             <PresentationFormatDescriptor Value="0000" Exponent="0" Format="1" NameSpace="01" Unit="0000"/>
             <PeriodForReadingThisCharacteristic>0</PeriodForReadingThisCharacteristic>
             <PeriodForProperties/>
         </Characteristic>
         <Characteristic>
-            <Name>Humidity Setpoint</Name>
-            <Uuid BaseUUID="E8CC000055E30B6440F8B2F289661BDA" BaseUUIDName="Custom Thermometer">0101</Uuid>
+            <Name>Exterior Temperature</Name>
+            <Uuid BaseUUID="E8CC000055E30B6440F8B2F289661BDA" BaseUUIDName="Custom Thermometer">0134</Uuid>
             <DefaultValue></DefaultValue>
             <UsePresentationFormat>0</UsePresentationFormat>
             <MaxDataLength>4</MaxDataLength>
@@ -37,20 +37,20 @@
             <ForceOpen>false</ForceOpen>
             <Properties>
                 <WriteWithoutResponse>false</WriteWithoutResponse>
-                <Write>true</Write>
-                <Notify>false</Notify>
+                <Write>false</Write>
+                <Notify>true</Notify>
                 <Indicate>false</Indicate>
                 <Broadcast>false</Broadcast>
             </Properties>
-            <SetPipe>true</SetPipe>
+            <SetPipe>false</SetPipe>
             <AckIsAuto>false</AckIsAuto>
             <PresentationFormatDescriptor Value="0000" Exponent="0" Format="1" NameSpace="01" Unit="0000"/>
             <PeriodForReadingThisCharacteristic>0</PeriodForReadingThisCharacteristic>
             <PeriodForProperties/>
         </Characteristic>
         <Characteristic>
-            <Name>Humidity Necessity Coeff</Name>
-            <Uuid BaseUUID="E8CC000055E30B6440F8B2F289661BDA" BaseUUIDName="Custom Thermometer">0103</Uuid>
+            <Name>Interior Humidity</Name>
+            <Uuid BaseUUID="E8CC000055E30B6440F8B2F289661BDA" BaseUUIDName="Custom Thermometer">0131</Uuid>
             <DefaultValue></DefaultValue>
             <UsePresentationFormat>0</UsePresentationFormat>
             <MaxDataLength>4</MaxDataLength>
@@ -58,20 +58,20 @@
             <ForceOpen>false</ForceOpen>
             <Properties>
                 <WriteWithoutResponse>false</WriteWithoutResponse>
-                <Write>true</Write>
-                <Notify>false</Notify>
+                <Write>false</Write>
+                <Notify>true</Notify>
                 <Indicate>false</Indicate>
                 <Broadcast>false</Broadcast>
             </Properties>
-            <SetPipe>true</SetPipe>
+            <SetPipe>false</SetPipe>
             <AckIsAuto>false</AckIsAuto>
             <PresentationFormatDescriptor Value="0000" Exponent="0" Format="1" NameSpace="01" Unit="0000"/>
             <PeriodForReadingThisCharacteristic>0</PeriodForReadingThisCharacteristic>
             <PeriodForProperties/>
         </Characteristic>
         <Characteristic>
-            <Name>Temperature Necessity Coeff</Name>
-            <Uuid BaseUUID="E8CC000055E30B6440F8B2F289661BDA" BaseUUIDName="Custom Thermometer">0104</Uuid>
+            <Name>Interior Temperature</Name>
+            <Uuid BaseUUID="E8CC000055E30B6440F8B2F289661BDA" BaseUUIDName="Custom Thermometer">0132</Uuid>
             <DefaultValue></DefaultValue>
             <UsePresentationFormat>0</UsePresentationFormat>
             <MaxDataLength>4</MaxDataLength>
@@ -79,54 +79,12 @@
             <ForceOpen>false</ForceOpen>
             <Properties>
                 <WriteWithoutResponse>false</WriteWithoutResponse>
-                <Write>true</Write>
-                <Notify>false</Notify>
+                <Write>false</Write>
+                <Notify>true</Notify>
                 <Indicate>false</Indicate>
                 <Broadcast>false</Broadcast>
             </Properties>
-            <SetPipe>true</SetPipe>
-            <AckIsAuto>false</AckIsAuto>
-            <PresentationFormatDescriptor Value="0000" Exponent="0" Format="1" NameSpace="01" Unit="0000"/>
-            <PeriodForReadingThisCharacteristic>0</PeriodForReadingThisCharacteristic>
-            <PeriodForProperties/>
-        </Characteristic>
-        <Characteristic>
-            <Name>Venting Necessity Coeff</Name>
-            <Uuid BaseUUID="E8CC000055E30B6440F8B2F289661BDA" BaseUUIDName="Custom Thermometer">0105</Uuid>
-            <DefaultValue></DefaultValue>
-            <UsePresentationFormat>0</UsePresentationFormat>
-            <MaxDataLength>4</MaxDataLength>
-            <AttributeLenType>1</AttributeLenType>
-            <ForceOpen>false</ForceOpen>
-            <Properties>
-                <WriteWithoutResponse>false</WriteWithoutResponse>
-                <Write>true</Write>
-                <Notify>false</Notify>
-                <Indicate>false</Indicate>
-                <Broadcast>false</Broadcast>
-            </Properties>
-            <SetPipe>true</SetPipe>
-            <AckIsAuto>false</AckIsAuto>
-            <PresentationFormatDescriptor Value="0000" Exponent="0" Format="1" NameSpace="01" Unit="0000"/>
-            <PeriodForReadingThisCharacteristic>0</PeriodForReadingThisCharacteristic>
-            <PeriodForProperties/>
-        </Characteristic>
-        <Characteristic>
-            <Name>Venting Necessity Overshoot</Name>
-            <Uuid BaseUUID="E8CC000055E30B6440F8B2F289661BDA" BaseUUIDName="Custom Thermometer">0106</Uuid>
-            <DefaultValue></DefaultValue>
-            <UsePresentationFormat>0</UsePresentationFormat>
-            <MaxDataLength>4</MaxDataLength>
-            <AttributeLenType>1</AttributeLenType>
-            <ForceOpen>false</ForceOpen>
-            <Properties>
-                <WriteWithoutResponse>false</WriteWithoutResponse>
-                <Write>true</Write>
-                <Notify>false</Notify>
-                <Indicate>false</Indicate>
-                <Broadcast>false</Broadcast>
-            </Properties>
-            <SetPipe>true</SetPipe>
+            <SetPipe>false</SetPipe>
             <AckIsAuto>false</AckIsAuto>
             <PresentationFormatDescriptor Value="0000" Exponent="0" Format="1" NameSpace="01" Unit="0000"/>
             <PeriodForReadingThisCharacteristic>0</PeriodForReadingThisCharacteristic>
@@ -234,7 +192,7 @@
             <ForceOpen>false</ForceOpen>
             <Properties>
                 <WriteWithoutResponse>false</WriteWithoutResponse>
-                <Write>true</Write>
+                <Write>false</Write>
                 <Notify>true</Notify>
                 <Indicate>false</Indicate>
                 <Broadcast>false</Broadcast>
@@ -255,7 +213,7 @@
             <ForceOpen>false</ForceOpen>
             <Properties>
                 <WriteWithoutResponse>false</WriteWithoutResponse>
-                <Write>true</Write>
+                <Write>false</Write>
                 <Notify>true</Notify>
                 <Indicate>false</Indicate>
                 <Broadcast>false</Broadcast>
@@ -276,7 +234,7 @@
             <ForceOpen>false</ForceOpen>
             <Properties>
                 <WriteWithoutResponse>false</WriteWithoutResponse>
-                <Write>true</Write>
+                <Write>false</Write>
                 <Notify>true</Notify>
                 <Indicate>false</Indicate>
                 <Broadcast>false</Broadcast>
@@ -289,11 +247,11 @@
         </Characteristic>
     </Service>
     <Service Type="local" PrimaryService="true">
-        <Name>Greenhouse Measurements</Name>
-        <Uuid BaseUUID="E8CC000055E30B6440F8B2F289661BDA" BaseUUIDName="Custom Thermometer">0130</Uuid>
+        <Name>Greenhouse User Adjustments</Name>
+        <Uuid BaseUUID="E8CC000055E30B6440F8B2F289661BDA" BaseUUIDName="Custom Thermometer">0100</Uuid>
         <Characteristic>
-            <Name>Exterior Humidity</Name>
-            <Uuid BaseUUID="E8CC000055E30B6440F8B2F289661BDA" BaseUUIDName="Custom Thermometer">0133</Uuid>
+            <Name>Temperature Setpoint</Name>
+            <Uuid BaseUUID="E8CC000055E30B6440F8B2F289661BDA" BaseUUIDName="Custom Thermometer">0102</Uuid>
             <DefaultValue></DefaultValue>
             <UsePresentationFormat>0</UsePresentationFormat>
             <MaxDataLength>4</MaxDataLength>
@@ -301,20 +259,20 @@
             <ForceOpen>false</ForceOpen>
             <Properties>
                 <WriteWithoutResponse>false</WriteWithoutResponse>
-                <Write>false</Write>
-                <Notify>true</Notify>
+                <Write>true</Write>
+                <Notify>false</Notify>
                 <Indicate>false</Indicate>
                 <Broadcast>false</Broadcast>
             </Properties>
             <SetPipe>true</SetPipe>
-            <AckIsAuto>false</AckIsAuto>
+            <AckIsAuto>true</AckIsAuto>
             <PresentationFormatDescriptor Value="0000" Exponent="0" Format="1" NameSpace="01" Unit="0000"/>
             <PeriodForReadingThisCharacteristic>0</PeriodForReadingThisCharacteristic>
             <PeriodForProperties/>
         </Characteristic>
         <Characteristic>
-            <Name>Exterior Temperature</Name>
-            <Uuid BaseUUID="E8CC000055E30B6440F8B2F289661BDA" BaseUUIDName="Custom Thermometer">0134</Uuid>
+            <Name>Humidity Setpoint</Name>
+            <Uuid BaseUUID="E8CC000055E30B6440F8B2F289661BDA" BaseUUIDName="Custom Thermometer">0101</Uuid>
             <DefaultValue></DefaultValue>
             <UsePresentationFormat>0</UsePresentationFormat>
             <MaxDataLength>4</MaxDataLength>
@@ -322,20 +280,20 @@
             <ForceOpen>false</ForceOpen>
             <Properties>
                 <WriteWithoutResponse>false</WriteWithoutResponse>
-                <Write>false</Write>
-                <Notify>true</Notify>
+                <Write>true</Write>
+                <Notify>false</Notify>
                 <Indicate>false</Indicate>
                 <Broadcast>false</Broadcast>
             </Properties>
             <SetPipe>true</SetPipe>
-            <AckIsAuto>false</AckIsAuto>
+            <AckIsAuto>true</AckIsAuto>
             <PresentationFormatDescriptor Value="0000" Exponent="0" Format="1" NameSpace="01" Unit="0000"/>
             <PeriodForReadingThisCharacteristic>0</PeriodForReadingThisCharacteristic>
             <PeriodForProperties/>
         </Characteristic>
         <Characteristic>
-            <Name>Interior Humidity</Name>
-            <Uuid BaseUUID="E8CC000055E30B6440F8B2F289661BDA" BaseUUIDName="Custom Thermometer">0131</Uuid>
+            <Name>Humidity Necessity Coeff</Name>
+            <Uuid BaseUUID="E8CC000055E30B6440F8B2F289661BDA" BaseUUIDName="Custom Thermometer">0103</Uuid>
             <DefaultValue></DefaultValue>
             <UsePresentationFormat>0</UsePresentationFormat>
             <MaxDataLength>4</MaxDataLength>
@@ -343,20 +301,20 @@
             <ForceOpen>false</ForceOpen>
             <Properties>
                 <WriteWithoutResponse>false</WriteWithoutResponse>
-                <Write>false</Write>
-                <Notify>true</Notify>
+                <Write>true</Write>
+                <Notify>false</Notify>
                 <Indicate>false</Indicate>
                 <Broadcast>false</Broadcast>
             </Properties>
             <SetPipe>true</SetPipe>
-            <AckIsAuto>false</AckIsAuto>
+            <AckIsAuto>true</AckIsAuto>
             <PresentationFormatDescriptor Value="0000" Exponent="0" Format="1" NameSpace="01" Unit="0000"/>
             <PeriodForReadingThisCharacteristic>0</PeriodForReadingThisCharacteristic>
             <PeriodForProperties/>
         </Characteristic>
         <Characteristic>
-            <Name>Interior Temperature</Name>
-            <Uuid BaseUUID="E8CC000055E30B6440F8B2F289661BDA" BaseUUIDName="Custom Thermometer">0132</Uuid>
+            <Name>Temperature Necessity Coeff</Name>
+            <Uuid BaseUUID="E8CC000055E30B6440F8B2F289661BDA" BaseUUIDName="Custom Thermometer">0104</Uuid>
             <DefaultValue></DefaultValue>
             <UsePresentationFormat>0</UsePresentationFormat>
             <MaxDataLength>4</MaxDataLength>
@@ -364,20 +322,125 @@
             <ForceOpen>false</ForceOpen>
             <Properties>
                 <WriteWithoutResponse>false</WriteWithoutResponse>
-                <Write>false</Write>
-                <Notify>true</Notify>
+                <Write>true</Write>
+                <Notify>false</Notify>
                 <Indicate>false</Indicate>
                 <Broadcast>false</Broadcast>
             </Properties>
             <SetPipe>true</SetPipe>
-            <AckIsAuto>false</AckIsAuto>
+            <AckIsAuto>true</AckIsAuto>
+            <PresentationFormatDescriptor Value="0000" Exponent="0" Format="1" NameSpace="01" Unit="0000"/>
+            <PeriodForReadingThisCharacteristic>0</PeriodForReadingThisCharacteristic>
+            <PeriodForProperties/>
+        </Characteristic>
+        <Characteristic>
+            <Name>Venting Necessity Threshold</Name>
+            <Uuid BaseUUID="E8CC000055E30B6440F8B2F289661BDA" BaseUUIDName="Custom Thermometer">0105</Uuid>
+            <DefaultValue></DefaultValue>
+            <UsePresentationFormat>0</UsePresentationFormat>
+            <MaxDataLength>4</MaxDataLength>
+            <AttributeLenType>1</AttributeLenType>
+            <ForceOpen>false</ForceOpen>
+            <Properties>
+                <WriteWithoutResponse>false</WriteWithoutResponse>
+                <Write>true</Write>
+                <Notify>false</Notify>
+                <Indicate>false</Indicate>
+                <Broadcast>false</Broadcast>
+            </Properties>
+            <SetPipe>true</SetPipe>
+            <AckIsAuto>true</AckIsAuto>
+            <PresentationFormatDescriptor Value="0000" Exponent="0" Format="1" NameSpace="01" Unit="0000"/>
+            <PeriodForReadingThisCharacteristic>0</PeriodForReadingThisCharacteristic>
+            <PeriodForProperties/>
+        </Characteristic>
+        <Characteristic>
+            <Name>Venting Necessity Overshoot</Name>
+            <Uuid BaseUUID="E8CC000055E30B6440F8B2F289661BDA" BaseUUIDName="Custom Thermometer">0106</Uuid>
+            <DefaultValue></DefaultValue>
+            <UsePresentationFormat>0</UsePresentationFormat>
+            <MaxDataLength>4</MaxDataLength>
+            <AttributeLenType>1</AttributeLenType>
+            <ForceOpen>false</ForceOpen>
+            <Properties>
+                <WriteWithoutResponse>false</WriteWithoutResponse>
+                <Write>true</Write>
+                <Notify>false</Notify>
+                <Indicate>false</Indicate>
+                <Broadcast>false</Broadcast>
+            </Properties>
+            <SetPipe>true</SetPipe>
+            <AckIsAuto>true</AckIsAuto>
+            <PresentationFormatDescriptor Value="0000" Exponent="0" Format="1" NameSpace="01" Unit="0000"/>
+            <PeriodForReadingThisCharacteristic>0</PeriodForReadingThisCharacteristic>
+            <PeriodForProperties/>
+        </Characteristic>
+        <Characteristic>
+            <Name>DateTime</Name>
+            <Uuid BaseUUID="E8CC000055E30B6440F8B2F289661BDA" BaseUUIDName="Custom Thermometer">0107</Uuid>
+            <DefaultValue></DefaultValue>
+            <UsePresentationFormat>0</UsePresentationFormat>
+            <MaxDataLength>4</MaxDataLength>
+            <AttributeLenType>1</AttributeLenType>
+            <ForceOpen>false</ForceOpen>
+            <Properties>
+                <WriteWithoutResponse>false</WriteWithoutResponse>
+                <Write>true</Write>
+                <Notify>false</Notify>
+                <Indicate>false</Indicate>
+                <Broadcast>false</Broadcast>
+            </Properties>
+            <SetPipe>false</SetPipe>
+            <AckIsAuto>true</AckIsAuto>
+            <PresentationFormatDescriptor Value="0000" Exponent="0" Format="1" NameSpace="01" Unit="0000"/>
+            <PeriodForReadingThisCharacteristic>0</PeriodForReadingThisCharacteristic>
+            <PeriodForProperties/>
+        </Characteristic>
+        <Characteristic>
+            <Name>Illumination On Time</Name>
+            <Uuid BaseUUID="E8CC000055E30B6440F8B2F289661BDA" BaseUUIDName="Custom Thermometer">0108</Uuid>
+            <DefaultValue></DefaultValue>
+            <UsePresentationFormat>0</UsePresentationFormat>
+            <MaxDataLength>2</MaxDataLength>
+            <AttributeLenType>1</AttributeLenType>
+            <ForceOpen>false</ForceOpen>
+            <Properties>
+                <WriteWithoutResponse>false</WriteWithoutResponse>
+                <Write>true</Write>
+                <Notify>false</Notify>
+                <Indicate>false</Indicate>
+                <Broadcast>false</Broadcast>
+            </Properties>
+            <SetPipe>true</SetPipe>
+            <AckIsAuto>true</AckIsAuto>
+            <PresentationFormatDescriptor Value="0000" Exponent="0" Format="1" NameSpace="01" Unit="0000"/>
+            <PeriodForReadingThisCharacteristic>0</PeriodForReadingThisCharacteristic>
+            <PeriodForProperties/>
+        </Characteristic>
+        <Characteristic>
+            <Name>Illumination Off Time</Name>
+            <Uuid BaseUUID="E8CC000055E30B6440F8B2F289661BDA" BaseUUIDName="Custom Thermometer">0109</Uuid>
+            <DefaultValue></DefaultValue>
+            <UsePresentationFormat>0</UsePresentationFormat>
+            <MaxDataLength>2</MaxDataLength>
+            <AttributeLenType>1</AttributeLenType>
+            <ForceOpen>false</ForceOpen>
+            <Properties>
+                <WriteWithoutResponse>false</WriteWithoutResponse>
+                <Write>true</Write>
+                <Notify>false</Notify>
+                <Indicate>false</Indicate>
+                <Broadcast>false</Broadcast>
+            </Properties>
+            <SetPipe>true</SetPipe>
+            <AckIsAuto>true</AckIsAuto>
             <PresentationFormatDescriptor Value="0000" Exponent="0" Format="1" NameSpace="01" Unit="0000"/>
             <PeriodForReadingThisCharacteristic>0</PeriodForReadingThisCharacteristic>
             <PeriodForProperties/>
         </Characteristic>
     </Service>
     <Gapsettings>
-        <Name></Name>
+        <Name>GREENHOUSE</Name>
         <DeviceNameWriteLength>0</DeviceNameWriteLength>
         <LocalPipeOnDeviceName>false</LocalPipeOnDeviceName>
         <DeviceNameShortLength>0</DeviceNameShortLength>
