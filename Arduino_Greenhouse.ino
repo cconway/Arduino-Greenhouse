@@ -24,6 +24,7 @@ float temperatureNecessityCoeff = 0.75;  // Unit-less, coefficient for balancing
 
 float ventingNecessityThreshold = 8.0f;  // Unit-less, takes into account balancing humidity and temperature setpoint targets
 float ventingNecessityOvershoot = 25.0f;  // Percent of ventingNecessityThreshold to overshoot by to reduce frequency of cycling
+float targetVentingNecessity = UNAVAILABLE_f;  // Venting necessity value at which to stop venting
 
 int illuminationOnMinutes = UNAVAILABLE_u;
 int illuminationOffMinutes = UNAVAILABLE_u;
@@ -129,8 +130,10 @@ void didEnterSteadyState(int fromState, int toState) {
   setValueForCharacteristic(PIPE_GREENHOUSE_CONTROLS_VENT_SERVO_POSITION_SET, (uint8_t) ventDoorServo.read());
   notifyClientOfValueForCharacteristic(PIPE_GREENHOUSE_CONTROLS_VENT_SERVO_POSITION_TX, (uint8_t) ventDoorServo.read());
   
-  setValueForCharacteristic(PIPE_GREENHOUSE_STATE_VENTING_NECESSITY_TARGET_SET, UNAVAILABLE_f);
-  notifyClientOfValueForCharacteristic(PIPE_GREENHOUSE_STATE_VENTING_NECESSITY_TARGET_TX, UNAVAILABLE_f);
+  targetVentingNecessity = UNAVAILABLE_f;
+  
+  setValueForCharacteristic(PIPE_GREENHOUSE_STATE_VENTING_NECESSITY_TARGET_SET, targetVentingNecessity);
+  notifyClientOfValueForCharacteristic(PIPE_GREENHOUSE_STATE_VENTING_NECESSITY_TARGET_TX, targetVentingNecessity);
 }
 
 void didLeaveSteadyState(int fromState, int toState) {
@@ -166,6 +169,7 @@ void stateChanged(int fromState, int toState) {
 void updateBluetoothReadPipes() {
   
   delay(100);  // Need to let BLE board settle before we fill set-pipes otherwise first command will be ignored
+  setValueForCharacteristic(PIPE_GREENHOUSE_USER_ADJUSTMENTS_TEMPERATURE_SETPOINT_SET, 12.34f);  // Throwaway to prime the pump
   
   Serial.println(F("Updating infrequently changed set-pipes"));
   
@@ -181,7 +185,7 @@ void updateBluetoothReadPipes() {
   
   // Climate Control State
 //  setValueForCharacteristic(PIPE_GREENHOUSE_STATE_VENTING_NECESSITY_SET, 0);
-//  setValueForCharacteristic(PIPE_GREENHOUSE_STATE_VENTING_NECESSITY_TARGET_SET, 0);
+  setValueForCharacteristic(PIPE_GREENHOUSE_STATE_VENTING_NECESSITY_TARGET_SET, targetVentingNecessity);
   setValueForCharacteristic(PIPE_GREENHOUSE_STATE_CLIMATE_CONTROL_STATE_SET, (uint8_t) climateStateMachine.getCurrentState());
   setValueForCharacteristic(PIPE_GREENHOUSE_STATE_SHIFT_REGISTER_STATE_SET, shiftRegisterState);
   
@@ -291,7 +295,7 @@ void analyzeSystemState() {
     
     case ClimateStateDecreasingHumidity: {
       
-      float targetVentingNecessity = (ventingNecessityThreshold * (1 - (ventingNecessityOvershoot / 100.0)));
+      targetVentingNecessity = (ventingNecessityThreshold * (1 - (ventingNecessityOvershoot / 100.0)));
       
       Serial.print("Target venting necessity = ");
       Serial.println(targetVentingNecessity);
