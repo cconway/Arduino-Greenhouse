@@ -373,6 +373,8 @@ void aci_loop() {  // To be run at each run-loop to drive ACI comm system
         //for the credit.
         if (ACI_STATUS_ERROR_PEER_ATT_ERROR != aci_evt->params.pipe_error.error_code) {
           
+          data_credit_pending = false;  // NOTE: Added while tracking down hang, don't want waitForDataCredit() to hang even though we got credit
+          
           aci_state.data_credit_available++;
         }
         

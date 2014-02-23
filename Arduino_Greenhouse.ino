@@ -1,18 +1,23 @@
-#include <Time.h>
-#include <SPI.h>
+#include "Arduino.h"
 #include <avr/pgmspace.h>
 #include <avr/wdt.h>
 
 #include <lib_aci.h>
 #include <aci_setup.h>
+#include <SPI.h>
 #include <Wire.h>
 #include <Servo.h>
+#include <Time.h>
+
 //#include <PID_v1.h>
 
-#include "ble_housekeeping.h"
+//#include "ble_housekeeping.h"
+#include "constants.h"
+#include "lib_nordic.h"
+#include "lib_ble.h"
 #include "lib_hih6100.h"
 #include "lib_fsm.h"
-#include "constants.h"
+
 
 // USER-CONFIGURABLE VARIABLES
 // -------------------------------------------------
@@ -32,8 +37,11 @@ int illuminationOffMinutes = UNAVAILABLE_u;
 // GLOBAL VARIABLES
 // -------------------------------------------------
 
+// Bluetooth Low Energy (BLE)
+BLE BLE_board(handleACIEvent);
+
 // Finite State Machines
-FiniteStateMachine climateStateMachine(5);  // Receives # of states to support
+FiniteStateMachine climateStateMachine(5, stateWillChange, stateDidChange);  // Receives # of states to support
 
 // Shift Register
 int shiftRegLatchPin = 4;
@@ -59,17 +67,18 @@ volatile int watchdogWokeUp = 0;
 
 void setup (void) {
   
-  Serial.begin(115200);
+  Serial.begin(57600);
   while(!Serial) {}  //  Wait until the serial port is available (useful only for the leonardo)
   Serial.println(F("Serial logging enabled"));
   
   // Configure Bluetooth LE support
 //  setDataReceivedCallbackFn(&processReceivedData);  // Pass our callback fn to the ble_housekeeping library
-  setACIPostEventHandler(handleACIEvent);
-  ble_setup();
+//  setACIPostEventHandler(handleACIEvent);
+//  aci_setup();
   
   // Initiate our measurement trigger
   startWatchdogTimer();
+//  wdt_enable(WDTO_4S);
   
   // Configure State Machine
   setupClimateStateMachine();
@@ -97,23 +106,6 @@ void loop() {
     analyzeSystemState();
     
     checkIlluminationTimer();
-    
-    // TESTING
-//    if ( timeStatus() != timeNotSet) {
-//      
-//      Serial.print(hour());
-//      Serial.print(minute());
-//      Serial.print(second());
-//      Serial.print(" ");
-//      Serial.print(day());
-//      Serial.print(" ");
-//      Serial.print(month());
-//      Serial.print(" ");
-//      Serial.print(year()); 
-//      Serial.println(); 
-//      
-//    } else Serial.println(F("Clock not yet synced"));
-    
   }
 
   //Process any ACI commands or events
@@ -123,45 +115,85 @@ void loop() {
 
 // CLIMATE STATE MACHINE CALLBACKS
 // ----------------------------------------------------
-void didEnterSteadyState(int fromState, int toState) {
+void stateWillChange(uint8_t fromState, uint8_t toState) {
+  
+  
+}
+
+void stateDidChange(uint8_t fromState, uint8_t toState) {
+  
+  // Send current state to BLE board
+  BLE_board.setValueForCharacteristic(PIPE_GREENHOUSE_STATE_CLIMATE_CONTROL_STATE_SET, (uint8_t) toState);
+  BLE_board.notifyClientOfValueForCharacteristic(PIPE_GREENHOUSE_STATE_CLIMATE_CONTROL_STATE_TX, (uint8_t) toState);
+  
+  switch (fromState) {  // DID LEAVE...
+    
+    case ClimateStateSteady: {
+      
+      didLeaveSteadyState(fromState, toState);
+      break;
+    }
+    
+    case ClimateStateDecreasingHumidity: {
+      
+      didLeaveDecreasingHumidityState(fromState, toState);
+      break;
+    }
+  }  // end switch(fromState)
+  
+  
+  switch (toState) {  // DID ENTER...
+    
+    case ClimateStateSteady: {
+      
+      didEnterSteadyState(fromState, toState);
+      break;
+    }
+    
+    case ClimateStateDecreasingHumidity: {
+      
+      didEnterDecreasingHumidityState(fromState, toState);
+      break;
+    }
+  }  // end switch(toState)
+  
+}
+
+// -----------------------------------------------------------------
+
+void didEnterSteadyState(uint8_t fromState, uint8_t toState) {
   
   ventDoorServo.write(VENT_DOOR_CLOSED);
   
-  setValueForCharacteristic(PIPE_GREENHOUSE_CONTROLS_VENT_SERVO_POSITION_SET, (uint8_t) ventDoorServo.read());
-  notifyClientOfValueForCharacteristic(PIPE_GREENHOUSE_CONTROLS_VENT_SERVO_POSITION_TX, (uint8_t) ventDoorServo.read());
+  BLE_board.setValueForCharacteristic(PIPE_GREENHOUSE_CONTROLS_VENT_SERVO_POSITION_SET, (uint8_t) ventDoorServo.read());
+  BLE_board.notifyClientOfValueForCharacteristic(PIPE_GREENHOUSE_CONTROLS_VENT_SERVO_POSITION_TX, (uint8_t) ventDoorServo.read());
   
   targetVentingNecessity = UNAVAILABLE_f;
   
-  setValueForCharacteristic(PIPE_GREENHOUSE_STATE_VENTING_NECESSITY_TARGET_SET, targetVentingNecessity);
-  notifyClientOfValueForCharacteristic(PIPE_GREENHOUSE_STATE_VENTING_NECESSITY_TARGET_TX, targetVentingNecessity);
+  BLE_board.setValueForCharacteristic(PIPE_GREENHOUSE_STATE_VENTING_NECESSITY_TARGET_SET, targetVentingNecessity);
+  BLE_board.notifyClientOfValueForCharacteristic(PIPE_GREENHOUSE_STATE_VENTING_NECESSITY_TARGET_TX, targetVentingNecessity);
 }
 
-void didLeaveSteadyState(int fromState, int toState) {
+void didLeaveSteadyState(uint8_t fromState, uint8_t toState) {
   
   // NO-OP
 }
 
-void didEnterDecreasingHumidityState(int fromState, int toState) {
+void didEnterDecreasingHumidityState(uint8_t fromState, uint8_t toState) {
   
   ventDoorServo.write(VENT_DOOR_OPEN);
   
-  setValueForCharacteristic(PIPE_GREENHOUSE_CONTROLS_VENT_SERVO_POSITION_SET, (uint8_t) ventDoorServo.read());
-  notifyClientOfValueForCharacteristic(PIPE_GREENHOUSE_CONTROLS_VENT_SERVO_POSITION_TX, (uint8_t) ventDoorServo.read());
+  BLE_board.setValueForCharacteristic(PIPE_GREENHOUSE_CONTROLS_VENT_SERVO_POSITION_SET, (uint8_t) ventDoorServo.read());
+  BLE_board.notifyClientOfValueForCharacteristic(PIPE_GREENHOUSE_CONTROLS_VENT_SERVO_POSITION_TX, (uint8_t) ventDoorServo.read());
 }
 
-void didLeaveDecreasingHumidityState(int fromState, int toState) {
+void didLeaveDecreasingHumidityState(uint8_t fromState, uint8_t toState) {
   
   ventDoorServo.write(VENT_DOOR_CLOSED);
   
-  setValueForCharacteristic(PIPE_GREENHOUSE_CONTROLS_VENT_SERVO_POSITION_SET, (uint8_t) ventDoorServo.read());
-  notifyClientOfValueForCharacteristic(PIPE_GREENHOUSE_CONTROLS_VENT_SERVO_POSITION_TX, (uint8_t) ventDoorServo.read());
+  BLE_board.setValueForCharacteristic(PIPE_GREENHOUSE_CONTROLS_VENT_SERVO_POSITION_SET, (uint8_t) ventDoorServo.read());
+  BLE_board.notifyClientOfValueForCharacteristic(PIPE_GREENHOUSE_CONTROLS_VENT_SERVO_POSITION_TX, (uint8_t) ventDoorServo.read());
   
-}
-
-void stateChanged(int fromState, int toState) {
-  
-  setValueForCharacteristic(PIPE_GREENHOUSE_STATE_CLIMATE_CONTROL_STATE_SET, (uint8_t) toState);
-  notifyClientOfValueForCharacteristic(PIPE_GREENHOUSE_STATE_CLIMATE_CONTROL_STATE_TX, (uint8_t) toState);
 }
 
 // BREAKOUT
@@ -169,36 +201,36 @@ void stateChanged(int fromState, int toState) {
 void updateBluetoothReadPipes() {
   
   delay(100);  // Need to let BLE board settle before we fill set-pipes otherwise first command will be ignored
-  setValueForCharacteristic(PIPE_GREENHOUSE_USER_ADJUSTMENTS_TEMPERATURE_SETPOINT_SET, 12.34f);  // Throwaway to prime the pump
+  BLE_board.setValueForCharacteristic(PIPE_GREENHOUSE_USER_ADJUSTMENTS_TEMPERATURE_SETPOINT_SET, 12.34f);  // Throwaway to prime the pump
   
   Serial.println(F("Updating infrequently changed set-pipes"));
   
   // User Adjustments  
-  setValueForCharacteristic(PIPE_GREENHOUSE_USER_ADJUSTMENTS_TEMPERATURE_SETPOINT_SET, temperatureSetpoint);
-  setValueForCharacteristic(PIPE_GREENHOUSE_USER_ADJUSTMENTS_HUMIDITY_SETPOINT_SET, humiditySetpoint);
-  setValueForCharacteristic(PIPE_GREENHOUSE_USER_ADJUSTMENTS_HUMIDITY_NECESSITY_COEFF_SET, humidityNecessityCoeff);
-  setValueForCharacteristic(PIPE_GREENHOUSE_USER_ADJUSTMENTS_TEMPERATURE_NECESSITY_COEFF_SET, temperatureNecessityCoeff);
-  setValueForCharacteristic(PIPE_GREENHOUSE_USER_ADJUSTMENTS_VENTING_NECESSITY_THRESHOLD_SET, ventingNecessityThreshold);
-  setValueForCharacteristic(PIPE_GREENHOUSE_USER_ADJUSTMENTS_VENTING_NECESSITY_OVERSHOOT_SET, ventingNecessityOvershoot);
-  setValueForCharacteristic(PIPE_GREENHOUSE_USER_ADJUSTMENTS_ILLUMINATION_ON_TIME_SET, illuminationOnMinutes);
-  setValueForCharacteristic(PIPE_GREENHOUSE_USER_ADJUSTMENTS_ILLUMINATION_OFF_TIME_SET, illuminationOffMinutes);
+  BLE_board.setValueForCharacteristic(PIPE_GREENHOUSE_USER_ADJUSTMENTS_TEMPERATURE_SETPOINT_SET, temperatureSetpoint);
+  BLE_board.setValueForCharacteristic(PIPE_GREENHOUSE_USER_ADJUSTMENTS_HUMIDITY_SETPOINT_SET, humiditySetpoint);
+  BLE_board.setValueForCharacteristic(PIPE_GREENHOUSE_USER_ADJUSTMENTS_HUMIDITY_NECESSITY_COEFF_SET, humidityNecessityCoeff);
+  BLE_board.setValueForCharacteristic(PIPE_GREENHOUSE_USER_ADJUSTMENTS_TEMPERATURE_NECESSITY_COEFF_SET, temperatureNecessityCoeff);
+  BLE_board.setValueForCharacteristic(PIPE_GREENHOUSE_USER_ADJUSTMENTS_VENTING_NECESSITY_THRESHOLD_SET, ventingNecessityThreshold);
+  BLE_board.setValueForCharacteristic(PIPE_GREENHOUSE_USER_ADJUSTMENTS_VENTING_NECESSITY_OVERSHOOT_SET, ventingNecessityOvershoot);
+  BLE_board.setValueForCharacteristic(PIPE_GREENHOUSE_USER_ADJUSTMENTS_ILLUMINATION_ON_TIME_SET, illuminationOnMinutes);
+  BLE_board.setValueForCharacteristic(PIPE_GREENHOUSE_USER_ADJUSTMENTS_ILLUMINATION_OFF_TIME_SET, illuminationOffMinutes);
   
   // Climate Control State
-//  setValueForCharacteristic(PIPE_GREENHOUSE_STATE_VENTING_NECESSITY_SET, 0);
-  setValueForCharacteristic(PIPE_GREENHOUSE_STATE_VENTING_NECESSITY_TARGET_SET, targetVentingNecessity);
-  setValueForCharacteristic(PIPE_GREENHOUSE_STATE_CLIMATE_CONTROL_STATE_SET, (uint8_t) climateStateMachine.getCurrentState());
-  setValueForCharacteristic(PIPE_GREENHOUSE_STATE_SHIFT_REGISTER_STATE_SET, shiftRegisterState);
+//  BLE_board.setValueForCharacteristic(PIPE_GREENHOUSE_STATE_VENTING_NECESSITY_SET, 0);
+  BLE_board.setValueForCharacteristic(PIPE_GREENHOUSE_STATE_VENTING_NECESSITY_TARGET_SET, targetVentingNecessity);
+  BLE_board.setValueForCharacteristic(PIPE_GREENHOUSE_STATE_CLIMATE_CONTROL_STATE_SET, (uint8_t) climateStateMachine.getCurrentState());
+  BLE_board.setValueForCharacteristic(PIPE_GREENHOUSE_STATE_SHIFT_REGISTER_STATE_SET, shiftRegisterState);
   
   // Controls
-  setValueForCharacteristic(PIPE_GREENHOUSE_CONTROLS_LIGHT_BANK_1_DUTY_CYCLE_SET, (uint8_t) lightBank1DutyCycle);
-  setValueForCharacteristic(PIPE_GREENHOUSE_CONTROLS_LIGHT_BANK_2_DUTY_CYCLE_SET, (uint8_t) lightBank2DutyCycle);
-  setValueForCharacteristic(PIPE_GREENHOUSE_CONTROLS_VENT_SERVO_POSITION_SET, (uint8_t) ventDoorServo.read());
+  BLE_board.setValueForCharacteristic(PIPE_GREENHOUSE_CONTROLS_LIGHT_BANK_1_DUTY_CYCLE_SET, (uint8_t) lightBank1DutyCycle);
+  BLE_board.setValueForCharacteristic(PIPE_GREENHOUSE_CONTROLS_LIGHT_BANK_2_DUTY_CYCLE_SET, (uint8_t) lightBank2DutyCycle);
+  BLE_board.setValueForCharacteristic(PIPE_GREENHOUSE_CONTROLS_VENT_SERVO_POSITION_SET, (uint8_t) ventDoorServo.read());
   
   // Measurements
-//  setValueForCharacteristic(PIPE_GREENHOUSE_MEASUREMENTS_EXTERIOR_HUMIDITY_SET, shiftRegisterState);
-//  setValueForCharacteristic(PIPE_GREENHOUSE_MEASUREMENTS_EXTERIOR_TEMPERATURE_SET, shiftRegisterState);
-//  setValueForCharacteristic(PIPE_GREENHOUSE_MEASUREMENTS_INTERIOR_HUMIDITY_SET, shiftRegisterState);
-//  setValueForCharacteristic(PIPE_GREENHOUSE_MEASUREMENTS_INTERIOR_TEMPERATURE_SET, shiftRegisterState);
+//  BLE_board.setValueForCharacteristic(PIPE_GREENHOUSE_MEASUREMENTS_EXTERIOR_HUMIDITY_SET, shiftRegisterState);
+//  BLE_board.setValueForCharacteristic(PIPE_GREENHOUSE_MEASUREMENTS_EXTERIOR_TEMPERATURE_SET, shiftRegisterState);
+//  BLE_board.setValueForCharacteristic(PIPE_GREENHOUSE_MEASUREMENTS_INTERIOR_HUMIDITY_SET, shiftRegisterState);
+//  BLE_board.setValueForCharacteristic(PIPE_GREENHOUSE_MEASUREMENTS_INTERIOR_TEMPERATURE_SET, shiftRegisterState);
 }
 
 void setupClimateStateMachine() {
@@ -208,14 +240,12 @@ void setupClimateStateMachine() {
   climateStateMachine.setCanTransition(ClimateStateSteady, ClimateStateDecreasingHumidity, true);
   climateStateMachine.setCanTransition(ClimateStateDecreasingHumidity, ClimateStateSteady, true);
   
-  climateStateMachine.setDidEnterHandler(ClimateStateSteady, didEnterSteadyState);
-  climateStateMachine.setDidLeaveHandler(ClimateStateSteady, didLeaveSteadyState);
-  
-  climateStateMachine.setDidEnterHandler(ClimateStateDecreasingHumidity, didEnterDecreasingHumidityState);
-  climateStateMachine.setDidLeaveHandler(ClimateStateDecreasingHumidity, didLeaveDecreasingHumidityState);
-  
-  climateStateMachine.stateChangedHandler = stateChanged;
-  
+//  climateStateMachine.setDidEnterHandler(ClimateStateSteady, didEnterSteadyState);
+//  climateStateMachine.setDidLeaveHandler(ClimateStateSteady, didLeaveSteadyState);
+//  
+//  climateStateMachine.setDidEnterHandler(ClimateStateDecreasingHumidity, didEnterDecreasingHumidityState);
+//  climateStateMachine.setDidLeaveHandler(ClimateStateDecreasingHumidity, didLeaveDecreasingHumidityState);
+    
   climateStateMachine.initialize();
 }
 
@@ -240,11 +270,11 @@ void performMeasurements() {
   exteriorHoneywell.performMeasurement();
 //  exteriorHoneywell.printStatus();
   
-//  setValueForCharacteristic(PIPE_GREENHOUSE_MEASUREMENTS_EXTERIOR_HUMIDITY_SET, exteriorHoneywell.humidity);
-  notifyClientOfValueForCharacteristic(PIPE_GREENHOUSE_MEASUREMENTS_EXTERIOR_HUMIDITY_TX, exteriorHoneywell.humidity);
+//  BLE_board.setValueForCharacteristic(PIPE_GREENHOUSE_MEASUREMENTS_EXTERIOR_HUMIDITY_SET, exteriorHoneywell.humidity);
+  BLE_board.notifyClientOfValueForCharacteristic(PIPE_GREENHOUSE_MEASUREMENTS_EXTERIOR_HUMIDITY_TX, exteriorHoneywell.humidity);
   
-//  setValueForCharacteristic(PIPE_GREENHOUSE_MEASUREMENTS_EXTERIOR_TEMPERATURE_SET, exteriorHoneywell.temperature);
-  notifyClientOfValueForCharacteristic(PIPE_GREENHOUSE_MEASUREMENTS_EXTERIOR_TEMPERATURE_TX, exteriorHoneywell.temperature);
+//  BLE_board.setValueForCharacteristic(PIPE_GREENHOUSE_MEASUREMENTS_EXTERIOR_TEMPERATURE_SET, exteriorHoneywell.temperature);
+  BLE_board.notifyClientOfValueForCharacteristic(PIPE_GREENHOUSE_MEASUREMENTS_EXTERIOR_TEMPERATURE_TX, exteriorHoneywell.temperature);
   
   // Interior
   enableHoneywellSensor(HoneywellSensorInterior);
@@ -252,11 +282,11 @@ void performMeasurements() {
   interiorHoneywell.performMeasurement();
 //  interiorHoneywell.printStatus();
   
-//  setValueForCharacteristic(PIPE_GREENHOUSE_MEASUREMENTS_INTERIOR_HUMIDITY_SET, interiorHoneywell.humidity);
-  notifyClientOfValueForCharacteristic(PIPE_GREENHOUSE_MEASUREMENTS_INTERIOR_HUMIDITY_TX, interiorHoneywell.humidity);
+//  BLE_board.setValueForCharacteristic(PIPE_GREENHOUSE_MEASUREMENTS_INTERIOR_HUMIDITY_SET, interiorHoneywell.humidity);
+  BLE_board.notifyClientOfValueForCharacteristic(PIPE_GREENHOUSE_MEASUREMENTS_INTERIOR_HUMIDITY_TX, interiorHoneywell.humidity);
   
-//  setValueForCharacteristic(PIPE_GREENHOUSE_MEASUREMENTS_INTERIOR_TEMPERATURE_SET, interiorHoneywell.temperature);
-  notifyClientOfValueForCharacteristic(PIPE_GREENHOUSE_MEASUREMENTS_INTERIOR_TEMPERATURE_TX, interiorHoneywell.temperature);
+//  BLE_board.setValueForCharacteristic(PIPE_GREENHOUSE_MEASUREMENTS_INTERIOR_TEMPERATURE_SET, interiorHoneywell.temperature);
+  BLE_board.notifyClientOfValueForCharacteristic(PIPE_GREENHOUSE_MEASUREMENTS_INTERIOR_TEMPERATURE_TX, interiorHoneywell.temperature);
   
   // Cleanup
   enableHoneywellSensor(HoneywellSensorNone);
@@ -274,11 +304,9 @@ void analyzeSystemState() {
   //    2.22             = ( 1.0                   * 2.5           * 1.0              ) + ( 1.0                      * 0.4              * -0.7                )
   float ventingNecessity = (humidityNecessityCoeff * humidityDelta * humidityDeviation) + (temperatureNecessityCoeff * temperatureDelta * temperatureDeviation);
   
-//  Serial.print("Venting necessity = ");
-//  Serial.println(ventingNecessity);
   
-  setValueForCharacteristic(PIPE_GREENHOUSE_STATE_VENTING_NECESSITY_SET, ventingNecessity);
-  notifyClientOfValueForCharacteristic(PIPE_GREENHOUSE_STATE_VENTING_NECESSITY_TX, ventingNecessity);
+  BLE_board.setValueForCharacteristic(PIPE_GREENHOUSE_STATE_VENTING_NECESSITY_SET, ventingNecessity);
+  BLE_board.notifyClientOfValueForCharacteristic(PIPE_GREENHOUSE_STATE_VENTING_NECESSITY_TX, ventingNecessity);
   
   
   switch ( climateStateMachine.getCurrentState() ) {
@@ -297,13 +325,8 @@ void analyzeSystemState() {
       
       targetVentingNecessity = (ventingNecessityThreshold * (1 - (ventingNecessityOvershoot / 100.0)));
       
-      Serial.print("Target venting necessity = ");
-      Serial.println(targetVentingNecessity);
-      
-      
-      setValueForCharacteristic(PIPE_GREENHOUSE_STATE_VENTING_NECESSITY_TARGET_SET, targetVentingNecessity);
-      notifyClientOfValueForCharacteristic(PIPE_GREENHOUSE_STATE_VENTING_NECESSITY_TARGET_TX, targetVentingNecessity);
-      
+      BLE_board.setValueForCharacteristic(PIPE_GREENHOUSE_STATE_VENTING_NECESSITY_TARGET_SET, targetVentingNecessity);
+      BLE_board.notifyClientOfValueForCharacteristic(PIPE_GREENHOUSE_STATE_VENTING_NECESSITY_TARGET_TX, targetVentingNecessity);
       
       if (ventingNecessity <= targetVentingNecessity) {  // Trigger right at the threshold
         
@@ -325,11 +348,6 @@ void analyzeSystemState() {
 void checkIlluminationTimer() {
   
   int minutesSinceMidnight = (60 * hour()) + minute();
-  
-//  // DEBUG
-//  Serial.println(minutesSinceMidnight);
-//  Serial.println(illuminationOnMinutes);
-//  Serial.println(illuminationOffMinutes);
   
   if (timeStatus() != timeSet || illuminationOnMinutes == UNAVAILABLE_u || illuminationOffMinutes == UNAVAILABLE_u) {
     
@@ -367,11 +385,11 @@ void checkIlluminationTimer() {
   digitalWrite(5, lightBank1DutyCycle);
   digitalWrite(6, lightBank2DutyCycle);
   
-  setValueForCharacteristic(PIPE_GREENHOUSE_CONTROLS_LIGHT_BANK_1_DUTY_CYCLE_SET, (uint8_t) lightBank1DutyCycle);
-  notifyClientOfValueForCharacteristic(PIPE_GREENHOUSE_CONTROLS_LIGHT_BANK_1_DUTY_CYCLE_TX, (uint8_t) lightBank1DutyCycle);
+  BLE_board.setValueForCharacteristic(PIPE_GREENHOUSE_CONTROLS_LIGHT_BANK_1_DUTY_CYCLE_SET, (uint8_t) lightBank1DutyCycle);
+  BLE_board.notifyClientOfValueForCharacteristic(PIPE_GREENHOUSE_CONTROLS_LIGHT_BANK_1_DUTY_CYCLE_TX, (uint8_t) lightBank1DutyCycle);
   
-  setValueForCharacteristic(PIPE_GREENHOUSE_CONTROLS_LIGHT_BANK_2_DUTY_CYCLE_SET, (uint8_t) lightBank2DutyCycle);
-  notifyClientOfValueForCharacteristic(PIPE_GREENHOUSE_CONTROLS_LIGHT_BANK_2_DUTY_CYCLE_TX, (uint8_t) lightBank2DutyCycle);
+  BLE_board.setValueForCharacteristic(PIPE_GREENHOUSE_CONTROLS_LIGHT_BANK_2_DUTY_CYCLE_SET, (uint8_t) lightBank2DutyCycle);
+  BLE_board.notifyClientOfValueForCharacteristic(PIPE_GREENHOUSE_CONTROLS_LIGHT_BANK_2_DUTY_CYCLE_TX, (uint8_t) lightBank2DutyCycle);
 }
 
 
@@ -415,6 +433,7 @@ boolean valueWithinLimits(float value, float minLimit, float maxLimit) {
   return (value >= minLimit && value <= maxLimit);
 }
 
+// Route incoming data to the correct state variables
 boolean receivedDataFromPipe(uint8_t *bytes, uint8_t byteCount, uint8_t pipe) {
   
   switch (pipe) {
@@ -427,7 +446,7 @@ boolean receivedDataFromPipe(uint8_t *bytes, uint8_t byteCount, uint8_t pipe) {
         if ( valueWithinLimits(floatValue, TEMPERATURE_SETPOINT_MIN, TEMPERATURE_SETPOINT_MAX) ) {
           
           temperatureSetpoint = floatValue;
-          setValueForCharacteristic(PIPE_GREENHOUSE_USER_ADJUSTMENTS_TEMPERATURE_SETPOINT_SET, floatValue); 
+          BLE_board.setValueForCharacteristic(PIPE_GREENHOUSE_USER_ADJUSTMENTS_TEMPERATURE_SETPOINT_SET, floatValue); 
         }
       }
       break;
@@ -441,7 +460,7 @@ boolean receivedDataFromPipe(uint8_t *bytes, uint8_t byteCount, uint8_t pipe) {
         if ( valueWithinLimits(floatValue, HUMIDITY_SETPOINT_MIN, HUMIDITY_SETPOINT_MAX) ) {
           
           humiditySetpoint = floatValue;
-          setValueForCharacteristic(PIPE_GREENHOUSE_USER_ADJUSTMENTS_HUMIDITY_SETPOINT_SET, floatValue); 
+          BLE_board.setValueForCharacteristic(PIPE_GREENHOUSE_USER_ADJUSTMENTS_HUMIDITY_SETPOINT_SET, floatValue); 
         }
       }
       break;
@@ -455,7 +474,7 @@ boolean receivedDataFromPipe(uint8_t *bytes, uint8_t byteCount, uint8_t pipe) {
         if ( valueWithinLimits(floatValue, NECESSITY_COEFF_MIN, NECESSITY_COEFF_MAX) ) {
           
           humidityNecessityCoeff = floatValue;
-          setValueForCharacteristic(PIPE_GREENHOUSE_USER_ADJUSTMENTS_HUMIDITY_NECESSITY_COEFF_SET, floatValue); 
+          BLE_board.setValueForCharacteristic(PIPE_GREENHOUSE_USER_ADJUSTMENTS_HUMIDITY_NECESSITY_COEFF_SET, floatValue); 
         }
       }
       break;
@@ -469,7 +488,7 @@ boolean receivedDataFromPipe(uint8_t *bytes, uint8_t byteCount, uint8_t pipe) {
         if ( valueWithinLimits(floatValue, NECESSITY_COEFF_MIN, NECESSITY_COEFF_MAX) ) {
           
           temperatureNecessityCoeff = floatValue;
-          setValueForCharacteristic(PIPE_GREENHOUSE_USER_ADJUSTMENTS_TEMPERATURE_NECESSITY_COEFF_SET, floatValue); 
+          BLE_board.setValueForCharacteristic(PIPE_GREENHOUSE_USER_ADJUSTMENTS_TEMPERATURE_NECESSITY_COEFF_SET, floatValue); 
         }
       }
       break;
@@ -483,7 +502,7 @@ boolean receivedDataFromPipe(uint8_t *bytes, uint8_t byteCount, uint8_t pipe) {
         if ( valueWithinLimits(floatValue, NECESSITY_THRESHOLD_MIN, NECESSITY_THRESHOLD_MAX) ) {
           
           ventingNecessityThreshold = floatValue;
-          setValueForCharacteristic(PIPE_GREENHOUSE_USER_ADJUSTMENTS_VENTING_NECESSITY_THRESHOLD_SET, floatValue); 
+          BLE_board.setValueForCharacteristic(PIPE_GREENHOUSE_USER_ADJUSTMENTS_VENTING_NECESSITY_THRESHOLD_SET, floatValue); 
         }
       }
       break;
@@ -497,7 +516,7 @@ boolean receivedDataFromPipe(uint8_t *bytes, uint8_t byteCount, uint8_t pipe) {
         if ( valueWithinLimits(floatValue, VENTING_OVERSHOOT_MIN, VENTING_OVERSHOOT_MAX) ) {
           
           ventingNecessityOvershoot = floatValue;
-          setValueForCharacteristic(PIPE_GREENHOUSE_USER_ADJUSTMENTS_VENTING_NECESSITY_OVERSHOOT_SET, floatValue); 
+          BLE_board.setValueForCharacteristic(PIPE_GREENHOUSE_USER_ADJUSTMENTS_VENTING_NECESSITY_OVERSHOOT_SET, floatValue); 
         }
       }
       break;
@@ -521,7 +540,7 @@ boolean receivedDataFromPipe(uint8_t *bytes, uint8_t byteCount, uint8_t pipe) {
       
         illuminationOnMinutes = *((int *)bytes);  // NOTE: Expecting that 'int' type is 2 bytes
         
-        setValueForCharacteristic(PIPE_GREENHOUSE_USER_ADJUSTMENTS_ILLUMINATION_ON_TIME_SET, illuminationOnMinutes);
+        BLE_board.setValueForCharacteristic(PIPE_GREENHOUSE_USER_ADJUSTMENTS_ILLUMINATION_ON_TIME_SET, illuminationOnMinutes);
       }
       
       break;
@@ -533,7 +552,7 @@ boolean receivedDataFromPipe(uint8_t *bytes, uint8_t byteCount, uint8_t pipe) {
       
         illuminationOffMinutes = *((int *)bytes);  // NOTE: Expecting that 'int' type is 2 bytes
         
-        setValueForCharacteristic(PIPE_GREENHOUSE_USER_ADJUSTMENTS_ILLUMINATION_OFF_TIME_SET, illuminationOffMinutes);
+        BLE_board.setValueForCharacteristic(PIPE_GREENHOUSE_USER_ADJUSTMENTS_ILLUMINATION_OFF_TIME_SET, illuminationOffMinutes);
       }
       
       break;
@@ -562,8 +581,8 @@ void enableHoneywellSensor(HoneywellSensor sensorID) {
    
    shiftRegisterState = enabledOutputs;
    
-   setValueForCharacteristic(PIPE_GREENHOUSE_STATE_SHIFT_REGISTER_STATE_SET, shiftRegisterState);
-   notifyClientOfValueForCharacteristic(PIPE_GREENHOUSE_STATE_SHIFT_REGISTER_STATE_TX, shiftRegisterState);
+   BLE_board.setValueForCharacteristic(PIPE_GREENHOUSE_STATE_SHIFT_REGISTER_STATE_SET, shiftRegisterState);
+   BLE_board.notifyClientOfValueForCharacteristic(PIPE_GREENHOUSE_STATE_SHIFT_REGISTER_STATE_TX, shiftRegisterState);
 }
 
 
@@ -586,7 +605,8 @@ void startWatchdogTimer() {
   
   // Set the watchdog timeout prescaler value to 1024 K 
   // which will yeild a time-out interval of about 8.0 s.
-  WDTCSR = B00100001;
+//  WDTCSR = B00100001;  // ~8s
+  WDTCSR = B00100000;  // ~4s
   
   // Enable the watchdog timer interupt.
   WDTCSR = WDTCSR | B01000000;

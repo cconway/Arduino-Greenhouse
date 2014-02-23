@@ -66,34 +66,8 @@ byte HIH6100_Sensor::_requestData(unsigned int *p_H_dat, unsigned int *p_T_dat) 
 void HIH6100_Sensor::printStatus(void) {
   
   Serial.print("HIH6100: ");
-  this->_print_float(humidity, 1);
+  Serial.print(humidity);
   Serial.print("  % humidity, ");
-  this->_print_float(temperature, 2);
+  Serial.print(temperature);
   Serial.println(" deg C");
 }
-   
-void HIH6100_Sensor::_print_float(float f, int num_digits) {
-  
-  int f_int;
-  int pows_of_ten[4] = {1, 10, 100, 1000};
-  int multiplier, whole, fract, d, n;
-
-  multiplier = pows_of_ten[num_digits];
-  if (f < 0.0)
-  {
-      f = -f;
-      Serial.print("-");
-  }
-  whole = (int) f;
-  fract = (int) (multiplier * (f - (float)whole));
-
-  Serial.print(whole);
-  Serial.print(".");
-
-  for (n=num_digits-1; n>=0; n--) // print each digit with no leading zero suppression
-  {
-       d = fract / pows_of_ten[n];
-       Serial.print(d);
-       fract = fract % pows_of_ten[n];
-  }
-} 
