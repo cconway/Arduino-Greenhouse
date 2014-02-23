@@ -114,13 +114,6 @@ Timing change state variable
 static boolean timing_change_done          = false;
 
 /*
-Used to test the UART TX characteristic notification
-*/
-//static uart_over_ble_t uart_over_ble;
-//static uint8_t         uart_buffer[20];
-//static uint8_t         uart_buffer_len = 0;
-
-/*
 Initialize the radio_ack. This is the ack received for every transmitted packet.
 */
 //static bool radio_ack_pending = false;
@@ -143,6 +136,7 @@ void aci_setup(void);
 void aci_loop(void);
 
 typedef void (*ACIPostEventHandler)(aci_state_t *aci_state, aci_evt_t *aci_evt);
-static ACIPostEventHandler postEventHandlerFn;
+
+void setACIPostEventHandler(ACIPostEventHandler handlerFn);
 
 #endif

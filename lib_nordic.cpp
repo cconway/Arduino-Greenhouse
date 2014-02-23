@@ -20,13 +20,14 @@
  */
  
 #include "lib_nordic.h"
+#include "services.h"
+
+ACIPostEventHandler postEventHandlerFn;
 
 void aci_setup(void)
 { 
   
-	/**
-	Point ACI data structures to the the setup data that the nRFgo studio generated for the nRF8001
-	*/   
+	// Point ACI data structures to the the setup data that the nRFgo studio generated for the nRF8001
 	if (NULL != services_pipe_type_mapping)
 	{
 	aci_state.aci_setup_info.services_pipe_type_mapping = &services_pipe_type_mapping[0];
@@ -39,10 +40,8 @@ void aci_setup(void)
 	aci_state.aci_setup_info.setup_msgs         = setup_msgs;
 	aci_state.aci_setup_info.num_setup_msgs     = NB_SETUP_MESSAGES;
 
-	/*
-	Tell the ACI library, the MCU to nRF8001 pin connections.
-	The Active pin is optional and can be marked UNUSED
-	*/	  	
+	// Tell the ACI library, the MCU to nRF8001 pin connections.
+	// The Active pin is optional and can be marked UNUSED
 	aci_state.aci_pins.board_name = REDBEARLAB_SHIELD_V1_1; //See board.h for details REDBEARLAB_SHIELD_V1_1 or BOARD_DEFAULT
 	aci_state.aci_pins.reqn_pin   = 9; //SS for Nordic board, 9 for REDBEARLAB_SHIELD_V1_1
 	aci_state.aci_pins.rdyn_pin   = 8; //3 for Nordic board, 8 for REDBEARLAB_SHIELD_V1_1
@@ -66,9 +65,7 @@ void aci_setup(void)
 
     //Turn debug printing on for the ACI Commands and Events to be printed on the Serial
 	lib_aci_debug_print(false);
-    
 }
-
 
 void aci_loop()
 {
@@ -259,7 +256,7 @@ void aci_loop()
     }
     
     // Now run our post-event handler
-    postEventHandlerFn(&aci_state, aci_evt);
+//    postEventHandlerFn(&aci_state, aci_evt);
     
   }
   else
@@ -269,5 +266,10 @@ void aci_loop()
     // Arduino can go to sleep now
     // Wakeup from sleep from the RDYN line
   }
+}
+
+void setACIPostEventHandler(ACIPostEventHandler handlerFn) {
+  
+  postEventHandlerFn = handlerFn;
 }
 

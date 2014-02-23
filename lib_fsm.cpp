@@ -13,22 +13,7 @@ FiniteStateMachine::FiniteStateMachine(uint8_t stateCount, FSM_HandlerFn stateWi
   for (int i=0; i < stateCount; i++) {
     _transitionMap[i] = (boolean *) malloc(stateCount * sizeof(boolean));
   }
-  
-  // Malloc space for the handler function pointers
-//  _willLeaveHandlers = (FSM_HandlerFn *) malloc(stateCount * sizeof(FSM_HandlerFn));
-//  _didLeaveHandlers = (FSM_HandlerFn *) malloc(stateCount * sizeof(FSM_HandlerFn));
-//  _willEnterHandlers = (FSM_HandlerFn *) malloc(stateCount * sizeof(FSM_HandlerFn));
-//  _didEnterHandlers = (FSM_HandlerFn *) malloc(stateCount * sizeof(FSM_HandlerFn));
 }
-
-//FiniteStateMachine::~FiniteStateMachine() {
-//  
-//  for (int i=0; i < _stateCount; i++) {
-//    free _transitionMap[i];
-//  }
-//  
-//  free _transitionMap;
-//}
 
 void FiniteStateMachine::initialize() {
   
@@ -90,23 +75,3 @@ boolean FiniteStateMachine::transitionToState(uint8_t toState) {
     
   } else return false;
 }
-
-//void FiniteStateMachine::setWillLeaveHandler(int state, FSM_HandlerFn handlerFn) {
-//  
-//  _willLeaveHandlers[state] = handlerFn;
-//}
-//
-//void FiniteStateMachine::setDidLeaveHandler(int state, FSM_HandlerFn handlerFn) {
-//  
-//  _didLeaveHandlers[state] = handlerFn;
-//}
-//
-//void FiniteStateMachine::setWillEnterHandler(int state, FSM_HandlerFn handlerFn) {
-//  
-//  _willEnterHandlers[state] = handlerFn;
-//}
-//
-//void FiniteStateMachine::setDidEnterHandler(int state, FSM_HandlerFn handlerFn) {
-//  
-//  _didEnterHandlers[state] = handlerFn;
-//}

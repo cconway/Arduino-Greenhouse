@@ -30,9 +30,8 @@ class BLE {
     void waitForDataCredit();
     boolean writeBufferToPipe(uint8_t *buffer, uint8_t byteCount, uint8_t pipe);
     
-    volatile byte _aci_cmd_pending;
-    volatile byte _data_credit_pending;
-    static ACIPostEventHandler _postEventHandlerFn;
+    byte _aci_cmd_pending;
+    byte _data_credit_pending;
 };
 
 #endif
