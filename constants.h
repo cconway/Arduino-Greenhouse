@@ -11,6 +11,25 @@ typedef enum ClimateState {
   
 };
 
+typedef struct {
+ 
+  byte magicNumber;
+  
+  float humiditySetpoint;
+  float humidityNecessityCoeff;  // Unit-less, coefficient for balancing humidity needs with temperature needs
+
+  float temperatureSetpoint;
+  float temperatureNecessityCoeff;  // Unit-less, coefficient for balancing humidity needs with temperature needs
+  
+  float ventingNecessityThreshold;  // Unit-less, takes into account balancing humidity and temperature setpoint targets
+  float ventingNecessityOvershoot;  // Percent of ventingNecessityThreshold to overshoot by to reduce frequency of cycling
+  float targetVentingNecessity;  // Venting necessity value at which to stop venting
+  
+  int illuminationOnMinutes;
+  int illuminationOffMinutes;
+ 
+} UserConfig;
+
 #define UNAVAILABLE_f -12345.678f  // Used for indicating a value has become unavailable
 #define UNAVAILABLE_u -1234  // Used for indicating a value has become unavailable
 
