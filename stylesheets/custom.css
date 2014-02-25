@@ -11,6 +11,35 @@ a {
 	color: inherit;
 }
 
+header {
+	position: absolute;
+	top: 0;
+	left: 0;
+	z-index: 1;
+	width: 100%;
+}
+
+header > h1 {
+	display: block;
+	text-align: left;
+	font-weight: normal;
+	font-style: normal;
+	width: 650px;
+	margin: 0 auto;
+	padding-top: 0.5em;
+	line-height: 1.5em;
+	font-size: 2em;
+}
+
+header > ul {
+	list-style: none;
+	margin: 0 auto;
+	padding: 0;
+	width: 650px;
+	font: 0.75em AvenirNext-Medium;
+	color: #7a7a7a;
+}
+
 figure.full-width {
 	
 	position: relative;
@@ -44,9 +73,15 @@ section {
 	margin: 0;
 }
 
-section > h2 {
-	margin: 0 auto;
+div.sleeve {
+	
 	max-width: 650px;
+	margin-right: auto;
+	margin-left: auto;
+}
+
+div.sleeve > h2 {
+	margin: 0 auto;
 	color: white;
 	line-height: 1em;
 	padding: 0;
@@ -56,15 +91,39 @@ section > h2 {
 	font-size: 1.5em;
 }
 
-
-section > p {
+div.sleeve > p {
 	margin: 1em auto 0;
-	max-width: 650px;
 	line-height: 1.5em;
 }
 
-section > ul {
+div.sleeve > ul {
 	margin-right: auto;
 	margin-left: auto;
-	max-width: 550px;
+}
+
+
+section figure {
+	float: right;
+	position: relative;
+	border-style: solid;
+	margin: 1em 0 1em 1em;
+	border-width: 1px;
+}
+
+section figure > img {
+	
+	width: 400px;
+	height: auto;
+	display: block;
+}
+
+section figure > figcaption {
+	position: absolute;
+	color: #ffffff;
+	background-color: #000000;
+	padding: 5px;
+	margin: 0;
+	bottom: 0;
+	line-height: 1em;
+	font-size: 0.75em;
 }
