@@ -1,0 +1,70 @@
+body {
+	font-size: 18px;
+	margin: 0;
+	padding: 0;
+	font-family: "Avenir Next";
+	color: white;
+	background-color: black;
+}
+
+a {
+	color: inherit;
+}
+
+figure.full-width {
+	
+	position: relative;
+	margin: 0;
+	padding: 0;
+}
+
+figure.full-width > figcaption {
+	position: absolute;
+	color: #ffffff;
+	background-color: #000000;
+	padding: 5px;
+	margin: 0;
+	bottom: 0;
+	line-height: 1em;
+	font-size: 0.75em;
+}
+
+figure.full-width > img {
+	width: 100%;
+	padding: 0;
+	margin: 0;
+	height: auto;
+	display: block;
+}
+
+section {
+	font: 1em;
+	padding: 2em 0;
+	background-color: #58a8b0;
+	margin: 0;
+}
+
+section > h2 {
+	margin: 0 auto;
+	max-width: 650px;
+	color: white;
+	line-height: 1em;
+	padding: 0;
+	font-weight: normal;
+	font-style: normal;
+	opacity: 0.5;
+	font-size: 1.5em;
+}
+
+
+section > p {
+	margin: 1em auto 0;
+	max-width: 650px;
+	line-height: 1.5em;
+}
+
+section > ul {
+	margin-right: auto;
+	margin-left: auto;
+	max-width: 550px;
+}

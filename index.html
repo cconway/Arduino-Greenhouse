@@ -1,71 +1,213 @@
 <!doctype html>
 <html>
-  <head>
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="chrome=1">
-    <title>Arduino-greenhouse by cconway</title>
-
-    <link rel="stylesheet" href="stylesheets/styles.css">
-    <link rel="stylesheet" href="stylesheets/pygment_trac.css">
-    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
-    <!--[if lt IE 9]>
-    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
-    <![endif]-->
-  </head>
-  <body>
-    <div class="wrapper">
-      <header>
-        <h1>Arduino-greenhouse</h1>
-        <p></p>
-
-        <p class="view"><a href="https://github.com/cconway/Arduino-Greenhouse">View the Project on GitHub <small>cconway/Arduino-Greenhouse</small></a></p>
-
-
-        <ul>
-          <li><a href="https://github.com/cconway/Arduino-Greenhouse/zipball/master">Download <strong>ZIP File</strong></a></li>
-          <li><a href="https://github.com/cconway/Arduino-Greenhouse/tarball/master">Download <strong>TAR Ball</strong></a></li>
-          <li><a href="https://github.com/cconway/Arduino-Greenhouse">View On <strong>GitHub</strong></a></li>
-        </ul>
-      </header>
-      <section>
-        <h3>
-<a name="welcome-to-github-pages" class="anchor" href="#welcome-to-github-pages"><span class="octicon octicon-link"></span></a>Welcome to GitHub Pages.</h3>
-
-<p>This automatic page generator is the easiest way to create beautiful pages for all of your projects. Author your page content here using GitHub Flavored Markdown, select a template crafted by a designer, and publish. After your page is generated, you can check out the new branch:</p>
-
-<pre><code>$ cd your_repo_root/repo_name
-$ git fetch origin
-$ git checkout gh-pages
-</code></pre>
-
-<p>If you're using the GitHub for Mac, simply sync your repository and you'll see the new branch.</p>
-
-<h3>
-<a name="designer-templates" class="anchor" href="#designer-templates"><span class="octicon octicon-link"></span></a>Designer Templates</h3>
-
-<p>We've crafted some handsome templates for you to use. Go ahead and continue to layouts to browse through them. You can easily go back to edit your page before publishing. After publishing your page, you can revisit the page generator and switch to another theme. Your Page content will be preserved if it remained markdown format.</p>
-
-<h3>
-<a name="rather-drive-stick" class="anchor" href="#rather-drive-stick"><span class="octicon octicon-link"></span></a>Rather Drive Stick?</h3>
-
-<p>If you prefer to not use the automatic generator, push a branch named <code>gh-pages</code> to your repository to create a page manually. In addition to supporting regular HTML content, GitHub Pages support Jekyll, a simple, blog aware static site generator written by our own Tom Preston-Werner. Jekyll makes it easy to create site-wide headers and footers without having to copy them across every page. It also offers intelligent blog support and other advanced templating features.</p>
-
-<h3>
-<a name="authors-and-contributors" class="anchor" href="#authors-and-contributors"><span class="octicon octicon-link"></span></a>Authors and Contributors</h3>
-
-<p>You can <a href="https://github.com/blog/821" class="user-mention">@mention</a> a GitHub username to generate a link to their profile. The resulting <code>&lt;a&gt;</code> element will link to the contributor's GitHub Profile. For example: In 2007, Chris Wanstrath (<a href="https://github.com/defunkt" class="user-mention">@defunkt</a>), PJ Hyett (<a href="https://github.com/pjhyett" class="user-mention">@pjhyett</a>), and Tom Preston-Werner (<a href="https://github.com/mojombo" class="user-mention">@mojombo</a>) founded GitHub.</p>
-
-<h3>
-<a name="support-or-contact" class="anchor" href="#support-or-contact"><span class="octicon octicon-link"></span></a>Support or Contact</h3>
-
-<p>Having trouble with Pages? Check out the documentation at <a href="http://help.github.com/pages">http://help.github.com/pages</a> or contact <a href="mailto:support@github.com">support@github.com</a> and we’ll help you sort it out.</p>
-      </section>
-      <footer>
-        <p>This project is maintained by <a href="https://github.com/cconway">cconway</a></p>
-        <p><small>Hosted on GitHub Pages &mdash; Theme by <a href="https://github.com/orderedlist">orderedlist</a></small></p>
-      </footer>
-    </div>
-    <script src="javascripts/scale.fix.js"></script>
-    
-  </body>
+	<head>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="chrome=1">
+	<title>Arduino-greenhouse by cconway</title>
+	
+	<!--
+	<link rel="stylesheet" href="stylesheets/styles.css">
+	<link rel="stylesheet" href="stylesheets/pygment_trac.css">
+	-->
+	<link rel="stylesheet" href="stylesheets/custom.css">
+	<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+	<!--[if lt IE 9]>
+	<script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+	<![endif]-->
+	</head>
+	
+	<body>
+	
+		<div class="wrapper">
+			
+			<!--
+			<header>
+				<h2>Arduino-greenhouse</h2>
+				<p></p>
+				
+				<p class="view"><a href="https://github.com/cconway/Arduino-Greenhouse">View the Project on GitHub <small>cconway/Arduino-Greenhouse</small></a></p>
+				
+				
+				<ul>
+				<li><a href="https://github.com/cconway/Arduino-Greenhouse/zipball/master">Download <strong>ZIP File</strong></a></li>
+				<li><a href="https://github.com/cconway/Arduino-Greenhouse/tarball/master">Download <strong>TAR Ball</strong></a></li>
+				<li><a href="https://github.com/cconway/Arduino-Greenhouse">View On <strong>GitHub</strong></a></li>
+				</ul>
+			</header>
+			-->
+			
+			<figure class="full-width">
+				<img src="media/DSCF1930.jpg">
+				<figcaption>View from the front, unmirrored side.</figcaption>
+			</figure>
+			
+			<section>
+			
+				<h2>An Introduction</h2>
+			
+				<p>I am an iOS app developer by day, but over the last few months I did some demo projects with Arduino and worked up to implementing custom Bluetooth LE communication using a "shield" by Redbear Labs. The next step was to put everything together into a real project that I could benefit from daily.</p>
+				<p>The goal of this project is to put together a working greenhouse and in the process to build up my electrical engineering skills. The rapidly growing market for mobile apps is just a few years old but I believe that as it matures one of the main segments will be apps that can integrate with the&nbsp;<em>physical</em> things around us.</p>
+				<p>I chose to start with a small, indoor greenhouse with integrated lighting. I would use a sealed container and various controls to manipulate the growing environment. &nbsp;The first two controls I would implement are the LED lighting system and ventilation control.</p>
+				<p>I'll add sections roughly in the order that I completed the work with a mix of discussing the options I learned about in my research and instructions on how to recreate my build.</p>
+				
+			</section>
+			
+			<figure class="full-width">
+				<img src="media/DSCF1937.jpg">
+				<figcaption>Breadboard with dual constant current driver circuits.  Note magnet-wire low-ohm resistors, center.</figcaption>
+			</figure>
+			
+			<section>
+			
+				<h2>Lighting options and LED constant current driver</h2>
+			
+				<p>Because it was the furthest outside my comfort zone, I began with the high-power LED lighting system first. &nbsp;From some initial research I learned that Fluorescent tube, High-Pressure Sodium (HPS) and Metal Halide were the traditional choices for grow lighting, listed in order of their intensity (and price).&nbsp;The idea of LED lighting systems is not new, but is gaining in popularity as the efficiency of the LEDs increases and their price decreases.&nbsp;<a href="http://www.nasa.gov/centers/kennedy/home/plant_growth.html">NASA has evaluated</a>&nbsp;whether LED lighting would be a good fit for long mission space farming. The more recent "high-power" LEDs are in a different class from those we're familiar with as indicators in our consumer electronics: They consume hundreds to thousand more power and emit similarly greater amounts of light; these are the components that make LEDs a viable replacement for incandescent or compact-fluorescent light bulbs.</p>
+				<p>One of the things drawing me to LED lighting was the notion of&nbsp;<a href="http://en.wikipedia.org/wiki/Photosynthetically_active_radiation">Photosynthetically Active Radiation</a>&nbsp;(PAR). &nbsp;This is the idea that the compounds in plants that drive photosynthesis (food production) respond better to specific colors of light. &nbsp;In a nutshell, very little light outside of the visible range (i.e. ultraviolet (UV) and infrared) is beneficial to photosynthesis and even within the visible range most colors between red and blue contribute very little. &nbsp;Looking at the&nbsp;<strong>Yield Photon Flux</strong>&nbsp;table, I chose to target the&nbsp;<strong>440nm</strong>&nbsp;and&nbsp;<strong>620nm</strong>&nbsp;peaks, which are the most efficient at stimulating photosynthesis.</p>
+				<p>These days there are tons of commercial LED grow light fixtures available for purchase, ranging from tens to thousands of dollars. The ones that realistically mimic the light output of professional grow lights typically use 10s to 100s of the 1W (1 watt) or 3W LED components. With a per-piece cost of $1-$5, these fixtures often cost hundreds of dollars.</p>
+				<p>Given the large fixed cost of the components themselves, I decided to try and save on the labor costs and build my own high-power LED lighting system. I based my design heavily off the instructions on&nbsp;<a href="http://www.instructables.com/id/Circuits-for-using-High-Power-LED-s/?ALLSTEPS">Dan Goldwater's LED power supply tutorial</a>. &nbsp;Specifically, I started from the constant-current design in&nbsp;<strong>Step 6</strong>.</p>
+				<p>To save on shipping, I mostly used components I could get locally:</p>
+				<ul>
+				<li>IRF520N HEXFET power transistor (in place of&nbsp;Fairchild FQP50N06L)</li>
+				<li>2N3904 NPN transistor (in place of&nbsp;Fairchild 2N5088BU)</li>
+				<li>100 kOhm resistor</li>
+				<li>Handmade &lt;1 ohm resistor&nbsp;<a href="http://www.cappels.org/dproj/DIY_Copper_Wire_Resitors/DIY_Copper_Wire_Resitors.html">out of magnet wire</a></li>
+				<li><a href="http://www.amazon.com/gp/product/B00FWO24US/ref=oh_details_o00_s00_i00?ie=UTF8&amp;psc=1">Intocircuit 120volt to 12-volt/30-watt power supply</a></li>
+				</ul>
+				<p>I started out with a basic knowledge of&nbsp;<a href="http://en.wikipedia.org/wiki/Ohm%27s_law">Ohm's Law</a>&nbsp;(i.e. V=IR) and&nbsp;<a href="http://en.wikipedia.org/wiki/Kirchhoff's_circuit_laws#Kirchhoff.27s_voltage_law_.28KVL.29">Kirchhoff's voltage law</a>, but had a difficult time understanding the constant current circuit. In my design, the Intocircuit power supply is converting 120V AC to 12V DC; the riskier part of the equation I didn't want to mess with myself. &nbsp;However, that power supply will deliver any amount of amps from 0 - 2.5, at 12V, that the net resistance of the circuit will dictate (see Ohm's Law). &nbsp;Our LED components are trickier, because if you connect them directly to the power supply they will draw more current than they need and quickly burn up; &nbsp;sort of like a person who can't control themselves at a buffet. Thus we need to put a&nbsp;<em>constant-current controller&nbsp;</em>between the 12V power supply and our LEDs. &nbsp;In some situations resistors could be used to limit the current flow, but at the high power level of our LEDs even minute temperature-dependent fluctuations in the amount of current they'll pass need to be actively controlled to avoid damage.</p>
+				<p>Dan's constant current controller design uses the MOSFET power transistor to regulate the current flow through the LED circuit. &nbsp;The smaller transistor constitutes the active feedback loop that causes the circuit to hold a fixed current flow. &nbsp;Overall I found Dan's description to be helpful, but there were a couple of values for which no explanation was given. &nbsp;In his calculation of LED current and R3 power, he uses the unlabeled constants 0.5 and 0.25. &nbsp;I believe I have identified where they come from, but it requires some brief discussion of how the circuit works:</p>
+				<p>The MOSFET power transistor we're using is "logic level", meaning the pin that controls the main power flow from the Drain to the Source is fully "ON" at just 5V, a common low voltage used in computer and micro controller circuits. From the circuit diagram we see R1 connecting our V+ positive supply voltage to the Gate pin (OK, because it can handle &gt;5V without damage). &nbsp;With that connection alone, the MOSFET would provide no regulation. &nbsp;With the NPN transistor connected between the MOSFET's gate and Ground, I could see how when it was full "ON" it would pull the Gate pin to 0V, stopping the flow of current through the LEDs. &nbsp;What stumped me was how the R3 calculation related to the NPN transistor modulating the Gate voltage (and thus the LED current flow). My understanding is that the feedback circuit relies on the behavior of the Base-Emitter Saturation Voltage V<sub>BE(sat)</sub>: Below that voltage the transistor will conduct no current from the Collector to Emitter. &nbsp;The goal when calculating R3, then, is to find the resistance that produces&nbsp;V<sub>BE(sat)</sub>&nbsp;at the your target amperage.&nbsp;</p>
+				<ul>
+				<li>When current is too high the voltage across R3 rises above&nbsp;V<sub>BE(sat)</sub>&nbsp;and the NPN starts to open, lowering the MOSFET Gate voltage and causing the current through the LEDs to reduce</li>
+				<li>When current goes too low the voltage across R3 goes below&nbsp;V<sub>BE(sat)</sub>&nbsp;and the NPN closes, letting the MOSFET Gate voltage increase, raising the current through the LEDs</li>
+				<li>Doesn't matter what power source voltage is or characteristics of LEDs. &nbsp;Feedback tuned entirely by&nbsp;V<sub>BE(sat)</sub>, R3, and our constant current goal.</li>
+				<li>Dan's example assumes&nbsp;V<sub>BE(sat)&nbsp;</sub>= 0.5V, though your transistor may differ</li>
+				</ul>
+				<p>The other constant that went unlabeled was in calculating the power the R3 resistor needs to handle. &nbsp;Dan uses 0.25. &nbsp;Knowing Power = V * I and substituting I = V / R you get P = V<sup>2</sup>&nbsp;/ R. &nbsp;So it would appear that the power calculation is just using&nbsp;V<sub>BE(sat)&nbsp;</sub>squared.</p>
+			
+			</section>
+			
+			<figure class="full-width">
+				<img src="media/DSCF1945.jpg">
+				<figcaption>Detail from top of LED base mounting hardware.  Central hole is a feedthrough for power lead.</figcaption>
+			</figure>
+			
+			<section>
+			
+				<h2>LED choice and considerations</h2>
+			
+				<p>After doing some research it seemed that the overwhelming consensus is that you can get cheap high-power LEDs from China but the quality is very hit-or-miss. &nbsp;For my first project I wanted to stick to something reliable so I would have fewer things to debug: &nbsp;That left Cree and Luxeon. &nbsp;I did some searching but the product lists at Digikey and Mouser were a little intimidating. I ended up ordering from the&nbsp;<a href="http://www.luxeonstar.com">Luxeon Star</a>&nbsp;website because their "Rebel" bases specifically mentioned easy soldering with simple tools and they have detailed data sheets for each product. &nbsp;I settled on the Rebel Tri-Star CoolBase models because of the slight discount per-LED over individual LEDs and ordered 6 "Red", 1 "Royal Blue" and 1 "Cyan" Tri-Star. That got my order to over $100 and earned free shipping. &nbsp;The Red and Royal Blue correspond very closely to my target PAR peaks at 620nm and 450nm while the Cyan just adds diversity. &nbsp;I chose the 3:1 ratio reds to blues loosely on observations of the commercial grow lamps.</p>
+				<ul>
+				<li>6x <span>Red (627nm) Rebel LEDs, Mounted on a 20mm Tri-Star CoolBase - 306 lm @ 700mA&nbsp;</span>(SR-03-D2050)</li>
+				<li>1x&nbsp;<span>Royal-Blue (447.5nm) Rebel LEDs, Mounted on a 20mm Tri-Star CoolBase - 2670 mW @ 700mA (SR-03-R0800)</span></li>
+				<li><span>1x&nbsp;<span>Cyan (505nm) Rebel LEDs, Mounted on a 20mm Tri-Star CoolBase - 366 lm @ 700mA (SR-03-E0070)</span></span></li>
+				<li><span><span>2x Intocircuit 120V to 12V 2.5A power supplies</span></span></li>
+				</ul>
+				<p>It is important to consider your power supplies and constant current driver design when placing your LED order. &nbsp;The constant current driver design is only efficient when the voltage drop across the LEDs is very close to the voltage of the power supply. &nbsp;Any difference is burned off as heat by the MOSFET and just adds trouble. &nbsp;What you want to do is make combinations of LEDs whose Forward Voltage (Vf), the drop in voltage across them at power, adds up nearly to your power supply voltage. &nbsp;For me the power supply voltage is 12V. &nbsp;You'll want to refer to Kirchoff's law for how the Vf combines in series vs. parallel. &nbsp;I ended up with 3x strings of 2 Red, 1 Royal Blue, and 1 Cyan adding up to 10.85V and 3x strings of 4 Red adding up to 9.2V. &nbsp;Note that this requires some fancy wiring between the Tri-Stars as LEDs in a single star may be used by several different strings. &nbsp;The all-Red strings total of 9.2V doesn't seem great, but later on I'll discuss why I needed to add a current mirror, which added another voltage drop of 2.5V, ultimately ending up much closer to the target 12V.</p>
+				<p>The other consideration is the maximum Amperage or Wattage of your 12V power supply. &nbsp;Mine can handle 2.5A consistently and each string needs 0.7A. &nbsp;I ended up combing them together into two sets of three parallel-connected strings, powering each set with its own 2.5A-capable power supply.</p>
+				
+			</section>
+			
+			<figure class="full-width">
+				<img src="media/DSCF1936.jpg">
+				<figcaption>Breadboard, center, with current mirror circuit for 3x all-Red LED strings.</figcaption>
+			</figure>
+			
+			<section>
+			
+				<h2>Parallel LED string considerations</h2>
+			
+				<p>As a result of the 12V power supply choice I made, I can only handle about 5 high-power LEDs in series before the net forward voltage gets too high. &nbsp;However, each serial string of LEDs only draws 700mA current, much less than the 2.5A available from the power supply. &nbsp;My solution is to run several strings in parallel per power supply, so that I only need 2 power supplies total (as opposed to 6+) for my 24 LEDs.</p>
+				<p>All of the constant current driver designs I had reviewed only covered multiple LEDs connected in serial. &nbsp;When I started searching for issues I had with uneven lighting between parallel strings, I found a variety of information about "thermal runaway" and its solution, a <strong>current mirror</strong>. The basic premise is that if strings are unbalanced either due to design or manufacturing tolerances, one may consume more current than another. &nbsp;The greater current consumption increases heat buildup, which in turn can increase the current through that string; &nbsp;creating a runaway situation. <a href="http://www.ledsmagazine.com/articles/print/volume-6/issue-2/features/led-design-forum-avoiding-thermal-runaway-when-driving-multiple-led-strings-magazine.html">This article</a> does a good job of explaining the issue and offering some designs for current mirrors. &nbsp;I also found <a href="http://ledlight.osram-os.com/wp-content/uploads/2010/05/AppGuideCurrentDistributioninParallelLEDStrings.Web_.pdf">a PDF from Osram</a> with similarly helpful information. &nbsp;Finally, for an explanation of how the current mirror itself works, <a href="http://en.wikipedia.org/wiki/Current_mirror#Basic_MOSFET_current_mirror">the Wikipedia entry</a> got me the closest to understanding.</p>
+				<p>I ended up building the simplest current mirror circuit using 3x&nbsp;TIP120 NPN transistors, one for each of the all-Red LED strings. My other three strings so far haven't needed the current mirror.</p>
+				<p>One important thing to note is that the transistors in the current mirror add another forward voltage drop to your string (in addition to the net Vf of the LEDs). &nbsp;In retrospect, I think my choice of the TIP120 was poor because it has a voltage drop of ~2V, which eats significantly into my 12V. &nbsp;As a result, I rewired my all-Red strings down to 4 in series so that my total forward voltage would be under 12.</p>
+			
+			</section>
+			
+			<figure class="full-width">
+				<img src="media/DSCF1940.jpg">
+				<figcaption>Vent flap (closed) with lever arm and servo.</figcaption>
+			</figure>
+			
+			<section>
+			
+				<h2>Greenhouse construction and venting</h2>
+			
+				<p>To help focus on the electronics at this stage, I decided to go with a pre-made option for the greenhouse container. &nbsp;I knew I wanted something that could be totally enclosed, to control temperature and humidity. &nbsp;I decided to start with something cheap, so I found a 106 quart Rubbermaid tub at the local hardware store.</p>
+				<p>Since heat-sinking the high-power LEDs is a significant concern, I chose a 1-foot square sheet of aluminum for mounting the LEDs. &nbsp;The aluminum is a decent thermal conductor yet soft enough to easily drill holes in for mounting items with screws. &nbsp;The Tri-Star bases have holes for #4 screws, so I bought 3x #4 machine screws and nuts per base. &nbsp;In the middle of my aluminum plate I mounted a re-used heatsink and around it I mounted each of the Tri-Star bases, with heatsink paste on all of them. &nbsp;I drilled extra holes lining up with the hole in the center of the Tri-Star bases to give me ports through which to route back wires. &nbsp;After mounting the LEDs I mapped out a plan for wiring together my 6 different series of LEDs.</p>
+				<p>Then I cut a smaller hole in the lid of the container, leaving a 0.5" edge for the aluminum sheet to lay. &nbsp;I also superglued a balsa-wood lip on the underside of the sheet so it couldn't slide out of alignment with the hole in the lid, potentially damaging the LEDs or wiring.</p>
+				<p>Finally, I cut a square section out of the side of the container, fairly high up, to act as my vent. &nbsp;After filing the edges to keep from getting caught up on burrs, I made a hinge out of tape, making the cut-out section into a door. I fashioned a small lever-arm out of balsa-wood and connected it to a servo with a bent piece of wire.</p>
+			
+			</section>
+			
+			<figure class="full-width">
+				<img src="media/DSCF1933.jpg">
+				<figcaption>Foreground: HIH6100 temp&amp;humidity sensor encased. Background: Arduino and breadboard.</figcaption>
+			</figure>
+			
+			<section>
+			
+				<h2>Humidity and temperature sensors</h2>
+			
+				<p>To know how to control the greenhouse we need to know what the current conditions are. I had experience with simpler temperature sensors like the TMP36, but ultimately ended up choosing the Honeywell HIH6100 series. &nbsp;This sensor appealed to me because it reported relative humidity (RH) and temperature and communicated digitally with just 2 pins using an Arduino-supported protocol called I<sup>2</sup>C. <a href="http://www.phanderson.com/arduino/hih6130.html">This code</a> worked great for quickly getting readings from the sensors.</p>
+				<p>I made the mistake, however, of assuming that being able to chain&nbsp;I<sup>2</sup>C devices together would mean I could connect multiple HIH6100's. &nbsp;However, I couldn't find a way to change the slave address for my 2nd HIH6100 so that meant I had to come up with a way to multiplex them. Initially I tried using 2N3904 transistors to turn on the power to one sensor at a time, but that just had the effect of interrupting communication for the other sensor on the&nbsp;I<sup>2</sup>C bus. &nbsp;Instead, the solution that worked was to use the&nbsp;2N3904's to connect only one sensor's SDA (data) pin to the Arduino at a time. Then the process for measuring from two sensors becomes:</p>
+				<ul>
+				<li>Write HIGH to digital out for 2N3904 connected to Sensor A</li>
+				<li>Request measurement from Sensor A</li>
+				<li>Write LOW to digital out for&nbsp;2N3904 connected to Sensor A</li>
+				<li>Write HIGH to digital out for 2N3904 connected to Sensor B</li>
+				<li>Request measurement from Sensor B</li>
+				<li>Write LOW to digital out for&nbsp;2N3904 connected to Sensor B</li>
+				</ul>
+			
+			</section>
+			
+			<figure class="full-width">
+				<img src="media/DSCF1935.jpg">
+				<figcaption>Aluminum sheet with mounted LEDs, power supplies, heatsinks, fan and breadboards (top: 2x constant current drivers, bottom right: current mirror). Arduino seen lower left.</figcaption>
+			</figure>
+			
+			<section>
+			
+				<h2>Bluetooth LE shield for Arduino</h2>
+			
+				<p>A while back I purchased the RedBearLab Bluetooth LE shield for Arduino to play around with the Bluetooth LE support in iOS. &nbsp;If you're like me, you're new to Bluetooth LE development so the vast amount of new terminology is overwhelming at first. In RBL's official SDK you'll primarily find demos for UART and Firmata. &nbsp;The UART project simply sets up a bi-directional serial communication tunnel between the Arduino and iOS. &nbsp;Unfortunately this is a rather contrived example of Bluetooth LE communication, which is primarily designed to work through a system called GATT. &nbsp;</p>
+				<p>In practical terms this means you create a fixed description of various properties that can be read or written to. The proprieties are named&nbsp;<strong>Characteristics</strong>&nbsp;and the characteristics are organized together into&nbsp;<strong>Services</strong>. It is common for a single characteristic to represent a single basic datatype such as an&nbsp;<strong>int</strong>,&nbsp;<strong>float</strong>, or&nbsp;<strong>boolean</strong>. A characteristic can have several modes:</p>
+				<ul>
+				<li>Read &ndash; Can be read</li>
+				<li>Write &ndash; Can be written to, won't send an ACK</li>
+				<li>Write With Response &ndash; Can be written to, will send ACK/NACK</li>
+				<li>Notify &ndash; Slave transmits when the value changed</li>
+				</ul>
+				<p>Read and Write are fairly self explanatory. &nbsp;Notify is great for informing the BLE client when a value has changed instead of requiring the client to poll the slave every so often.</p>
+				<p>The Arduino SDK for interfacing with the Nordic n8001 in the RedBearLabs shield relies on an abstraction called ACI. &nbsp;The default way of interfacing with the shield is by polling for updates over the ACI communication channel. &nbsp;I believe it's theoretically possible to use interrupts to replace the polling, but I haven't gone that far. &nbsp;Instead, you simply call aci_loop(), usually once per cycle of your Arduino sketch's loop(). &nbsp;This dispatches any queued messages to the shield and polls for any messages from the shield for you. &nbsp;Inside the aci_loop() function you switch() on the ACI Event's code to determine if that message indicates a change in status, receipt of data, an error, etc.</p>
+				<p>To change the GATT profile, with the Services and Characteristics, you need to download a Windows-only app from Nordic Semiconductor called nRFgo Studio. &nbsp;I believe I had to register an account, but ultimately you shouldn't have to pay anything. &nbsp;I successfully ran the app in VirtualBox on my Mac. &nbsp;Once you have the app installed, you'll want to download the <a href="https://devzone.nordicsemi.com/arduino">Arduino SDK from Nordic</a> and look for the "examples" folder. It's the <strong>.xml</strong>&nbsp;that you'll actually open from within the nRFgo Studio app. From there, the only two tabs I've changed anything on are "GATT Services" and "GAP Settings". &nbsp;Without going into all the details, I can say that to create your own custom Services and Characteristics you must choose the options to create new templates and then drag the templates into the center list. &nbsp;You'll also want to "nRF8001 Setup &gt; Edit 128 bit UUIDs..." and add a new "base" UUID. &nbsp;One simple way is typing "uuidgen" at the command line in OSX. Once you've finished your configuration, choose "nRF8001 Setup &gt; Generate Source Files &gt; Generate only services.h" and choose where to save. &nbsp;You'll copy the new services.h into your Arduino project folder.</p>
+				<p>The way you implement the Bluetooth LE Services and Characteristics was a little counter-intuitive to me. &nbsp;The Nordic nRFgo Studio application creates a services.h file with your configuration. &nbsp;In it, it #defines a number of named "pipes", each one which is uni-directional. &nbsp;A single Characteristic has individual pipes for each mode: read, write, write with response, notify, etc. &nbsp;You use these pipe identifiers to determine for which Characteristic data was received, or through which Characteristic to transmit data to the client. When a client WRITEs to the BLE shield or the BLE shield NOTIFYs the client, the data sent/received is ephemeral and the shield acts just as an intermediary. &nbsp;However, Characteristics that can be READ maintain that value in the memory of the BLE shield and requests by the client for that value are delivered directly from the shield without involving the application controller (e.g. the Arduino). The pipe names for the READs are postfixed counter-intuitively with "SET", I suppose signifying that you're setting the value in the board's memory.</p>
+			
+			</section>
+			
+			<figure class="full-width">
+				<img src="media/DSCF1940.jpg">
+				<figcaption>Aluminum sheet with mounted LEDs, power supplies, heatsinks, fan and breadboards (top: 2x constant current drivers, bottom right: current mirror). Arduino seen lower left.</figcaption>
+			</figure>
+			
+			<section>
+			
+				<h2>Controlling LED lighting from Arduino</h2>
+			
+				<p>In <a href="http://www.instructables.com/id/Circuits-for-using-High-Power-LED-s/step8/a-little-micro-makes-all-the-difference/">Step 8</a>&nbsp;of Dan's constant current driver tutorial he shows a simple modification to allow controlling of the driver by a microcontroller, by simply wiring a digital out to the Gate pin of the MOSFET power transistor.</p>
+				<p>Although not strictly necessary, I thought it would be good practice not to connect my Arduino (a 5V system) to the 12V lighting system, electrically. If anything were to fail or wires to get crossed it would be easy to toast the Arduino. &nbsp;I settled on buying a couple of&nbsp;MCT2EM-ND Opto-Isolators (a.k.a. Optocouplers). &nbsp;I connected the emitter to the digital out from the Arduino with a 100 ohm resistor and connected the +12V to the detector's Collector pin and the Emitter pin to the MOSFET power transistor's Gate, leaving the detector's Base pin un-connected. &nbsp;Finally, I added a 100 kOhm resistor between the MOSFET's Gate pin and Ground to keep it from floating when the Opto-isolator is "OFF". &nbsp;This way, when the Arduino outputs digital HIGH, the detector's NPN transistor goes "ON" and the Gate pin&nbsp;</p>
+			
+			</section>
+			
+			<!--
+			<footer>
+				<p>This project is maintained by <a href="https://github.com/cconway">cconway</a></p>
+				<p><small>Hosted on GitHub Pages &mdash; Theme by <a href="https://github.com/orderedlist">orderedlist</a></small></p>
+			</footer>
+			-->
+		
+		</div>
+		<!--<script src="javascripts/scale.fix.js"></script>-->
+	
+	</body>
 </html>
