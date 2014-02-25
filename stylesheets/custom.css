@@ -17,6 +17,8 @@ header {
 	left: 0;
 	z-index: 1;
 	width: 100%;
+	background-color: black;
+	padding: 1em;
 }
 
 header > h1 {
@@ -24,7 +26,7 @@ header > h1 {
 	text-align: left;
 	font-weight: normal;
 	font-style: normal;
-	width: 650px;
+	max-width: 650px;
 	margin: 0 auto;
 	padding-top: 0.5em;
 	line-height: 1.5em;
@@ -35,7 +37,7 @@ header > ul {
 	list-style: none;
 	margin: 0 auto;
 	padding: 0;
-	width: 650px;
+	max-width: 650px;
 	font: 0.75em AvenirNext-Medium;
 	color: #7a7a7a;
 }
@@ -45,6 +47,7 @@ figure.full-width {
 	position: relative;
 	margin: 0;
 	padding: 0;
+	min-height: 10em;
 }
 
 figure.full-width > figcaption {
@@ -78,6 +81,8 @@ div.sleeve {
 	max-width: 650px;
 	margin-right: auto;
 	margin-left: auto;
+	padding-right: 1em;
+	padding-left: 1em;
 }
 
 div.sleeve > h2 {
