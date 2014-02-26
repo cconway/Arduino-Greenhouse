@@ -4,7 +4,6 @@ body {
 	padding: 0;
 	font-family: "Avenir Next";
 	color: white;
-	background-color: black;
 }
 
 a {
@@ -12,17 +11,12 @@ a {
 }
 
 header {
-	position: absolute;
-	top: 0;
-	left: 0;
-	z-index: 1;
-	width: 100%;
 	background-color: black;
 	padding: 1em;
 }
 
 header > h1 {
-	display: block;
+
 	text-align: left;
 	font-weight: normal;
 	font-style: normal;
