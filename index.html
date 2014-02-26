@@ -270,6 +270,30 @@
 				
 				<div class="sleeve">
 				
+					<h2>Balancing two goals with one passive control</h2>
+					
+					<p>Although more serious greenhouses often have active control over CO2 level, temperature, and humidity it's not uncommon for a greenhouse to have little control other than the opening and closing of louvers to let in outside air. In this small greenhouse we have one similar control: the vent flap. The LEDs are efficient enough that they don't create enough heat to act as a heater.</p>
+					
+					<p>When the flap is open our circulation fan is directing inside air out the vent, acting to equalize the interior conditions (humidity and temperature) with the exterior conditions. When the flap is closed, several things contribute to the internal conditions. Standing water can evaporate and plants will transpire, both raising the humidity. Sunlight may enter greenhouse and warm the trapped air. Choosing when to open and when to close the vent flap is key to keeping the interior climate at our goal, e.g. 70°F and 50% relative humidity (RH).</p>
+					
+					<p>I call the vent flap a passive control because in a best case scenario it has two options: maintain the natural internal climate or equalize with the external climate. An active control would look like a heater or A/C that can force the climate towards a desired set-point. The choice of when to operate our vent flap is complicated by the fact that it must attempt to satisfy two independent goals: a fixed temperature and a fixed humidity.</p>
+					
+					<p>To illustrate why achieving both goals with one control is complicated, consider the case where external temperature drops dramatically at night. The greenhouse's internal temperature is very near it's goal of 70°F, but transpiration from the plants is raising the humidity too high. If you open the vent to try and reduce RH by 1% you risk dropping the temperature by 20°! Obviously you need to weigh both the plusses and minuses.</p>
+					
+					<p>In another situation, the greenhouse could be just 1° above its temperature set-point yet have excellent interior humidity.  If there is a very slight temperature difference between interior and exterior, it would take a long time for the venting to reduce our internal temperature. However, if there is a large difference in humidity that long venting process could drastically reduce the interior humidity. In this case, trying to achieve the small temperature adjustment wasn't worth the damage done to our humidity level.</p>
+					
+					<p>One solution is to take into account both the <b>need</b> for adjustment as well as the <b>opportunity</b> for adjustment of each goal. The 'need' for adjustment can be represented as Need = X<sub>goal</sub> - X<sub>interior</sub>. The 'opportunity' for adjustment can be expressed as Opportunity = X<sub>interior</sub> - X<sub>exterior</sub>. We can then express the "necessity" of opening the vent as Necessity = Need * Opportunity.  Only when you have both the "need" and "opportunity" will the "necessity" be a positive value. No amount of need combined with zero opportunity will result in a positive necessity, which turns out to accurately describe real life.</p>
+					
+					<p>Now to take into account the necessity for both temperature and humidity we add the two together, N<sub>total</sub> = N<sub>temp</sub> + N<sub>humidity</sub>. For completeness, we add coefficients to each term that we can tweak to balance both the difference in units but also what we perceive as their relative importance: N<sub>total</sub> = A•N<sub>temp</sub> + B•N<sub>hum</sub>. The end result is N<sub>total</sub>, which has the characteristic of being positive when venting will help us reach one or both goals or less than zero when venting won't help either goal or will help one goal but significantly hurt the other.</p>
+					
+				</div>
+			
+			</section>
+			
+			<!--<section>
+				
+				<div class="sleeve">
+				
 					<h2>Controlling LED lighting from Arduino</h2>
 				
 					<p>In <a href="http://www.instructables.com/id/Circuits-for-using-High-Power-LED-s/step8/a-little-micro-makes-all-the-difference/">Step 8</a>&nbsp;of Dan's constant current driver tutorial he shows a simple modification to allow controlling of the driver by a microcontroller, by simply wiring a digital out to the Gate pin of the MOSFET power transistor.</p>
@@ -277,7 +301,7 @@
 				
 				</div>
 				
-			</section>
+			</section>-->
 			
 			<!--
 			<footer>
