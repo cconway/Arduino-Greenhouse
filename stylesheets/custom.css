@@ -125,3 +125,9 @@ section figure > figcaption {
 	line-height: 1em;
 	font-size: 0.75em;
 }
+
+em {
+	font: 1em AvenirNext-DemiBold;
+	font-weight: bold;
+	text-transform: uppercase;
+}
