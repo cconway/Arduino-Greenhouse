@@ -4,6 +4,7 @@ body {
 	padding: 0;
 	font-family: "Avenir Next";
 	color: white;
+	background-color: black;
 }
 
 a {
@@ -34,6 +35,12 @@ header > ul {
 	max-width: 650px;
 	font: 0.75em AvenirNext-Medium;
 	color: #7a7a7a;
+}
+
+header a {
+	
+	color: #58a8b0;
+	text-decoration: none;
 }
 
 figure.full-width {
