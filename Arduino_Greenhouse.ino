@@ -1,3 +1,10 @@
+// LICENSES: [a1cdbd]
+// -----------------------------------
+// The contents of this file contains the aggregate of contributions
+//   covered under one or more licences. The full text of those licenses
+//   can be found in the "LICENSES" file at the top level of this project
+//   identified by the MD5 fingerprints listed above.
+
 #include <avr/pgmspace.h>
 #include <avr/wdt.h>
 #include <EEPROM.h>
@@ -307,7 +314,7 @@ void analyzeSystemState() {
       BLE_board.setValueForCharacteristic(PIPE_GREENHOUSE_STATE_VENTING_NECESSITY_TARGET_SET, currentConfig.targetVentingNecessity);
       BLE_board.notifyClientOfValueForCharacteristic(PIPE_GREENHOUSE_STATE_VENTING_NECESSITY_TARGET_TX, currentConfig.targetVentingNecessity);
       
-      if (ventingNecessity <= currentConfig.targetVentingNecessity) {  // Trigger right at the threshold
+      if (ventingNecessity <= currentConfig.targetVentingNecessity) {  // Trigger only when we reach the lower target
         
         climateStateMachine.transitionToState(ClimateStateSteady);
       }
@@ -401,19 +408,19 @@ void handleACIEvent(aci_state_t *aci_state, aci_evt_t *aci_evt) {
       break;
     }
     
-    case ACI_EVT_CMD_RSP: {
+    case ACI_EVT_CMD_RSP: {  // Acknowledgement of an ACI command
       
       BLE_board._aci_cmd_pending = false;
       break;
     }
     
-    case ACI_EVT_DATA_CREDIT: {
+    case ACI_EVT_DATA_CREDIT: {  // Flow-control received the ability to make another transmission
       
       BLE_board._data_credit_pending = false;
       break;
     }
     
-    case ACI_EVT_PIPE_ERROR: {
+    case ACI_EVT_PIPE_ERROR: {  // An error associated with a pipe
       
       if (ACI_STATUS_ERROR_PEER_ATT_ERROR != aci_evt->params.pipe_error.error_code) {
           
@@ -590,6 +597,11 @@ boolean receivedDataFromPipe(uint8_t *bytes, uint8_t byteCount, uint8_t pipe) {
 // ----------------------------------------------------
 void enableHoneywellSensor(HoneywellSensor sensorID) {
   
+   // The transistors switching the SDA (data) line between our two
+   //  HIH6100 I2C devices are controlled by the outputs from an
+   //  8-bit shift register.  Here we set the shift register state
+   //  to enable the +5V output enabling the SDA line for one sensor
+   //  or the other.
    byte enabledOutputs;
    
    switch (sensorID) {
@@ -618,7 +630,7 @@ void persistConfiguration(void) {
   const byte* p = (const byte*)(const void*)&currentConfig;
   unsigned int i;
   unsigned int ee = 0;
-  for (i = 0; i < sizeof(UserConfig); i++) {
+  for (i = 0; i < sizeof(UserConfig); i++) {  // Write each byte of the struct to EEPROM in series
   
     EEPROM.write(ee++, *p++);
   }
@@ -629,7 +641,7 @@ void restoreConfiguration(void) {
   byte* p = (byte*)(void*)&currentConfig;
   unsigned int i;
   unsigned int ee = 0;
-  for (i = 0; i < sizeof(UserConfig); i++) {
+  for (i = 0; i < sizeof(UserConfig); i++) {    // Write each byte of the struct to EEPROM in series
     
     byte readByte = EEPROM.read(ee++);
     
@@ -649,8 +661,8 @@ void restoreConfiguration(void) {
       currentConfig.ventingNecessityOvershoot = 25.0f;  // Percent of ventingNecessityThreshold to overshoot by to reduce frequency of cycling
       currentConfig.targetVentingNecessity = UNAVAILABLE_f;  // Venting necessity value at which to stop venting
       
-      currentConfig.illuminationOnMinutes = UNAVAILABLE_u;
-      currentConfig.illuminationOffMinutes = UNAVAILABLE_u;
+      currentConfig.illuminationOnMinutes = UNAVAILABLE_u;  // Stored as minutes since 12:00AM
+      currentConfig.illuminationOffMinutes = UNAVAILABLE_u;  // Stored as minutes since 12:00AM
       
       break;
     }

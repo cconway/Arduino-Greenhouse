@@ -1,3 +1,10 @@
+// LICENSES: [c3912b, a1cdbd]
+// -----------------------------------
+// The contents of this file contains the aggregate of contributions
+//   covered under one or more licences. The full text of those licenses
+//   can be found in the "LICENSES" file at the top level of this project
+//   identified by the MD5 fingerprints listed above.
+
 // HIH_6130_1  - Arduino
 // 
 // Arduino                HIH-6130
@@ -9,9 +16,6 @@
 // Pin4 ----------------- Vdd (term 8) 
 //
 // Illustrates how to measure relative humidity and temperature.
-//
-// copyright, Peter H Anderson, Baltimore, MD, Nov, '11
-// You may use it, but please give credit.  
 
 #ifndef HIH6100_Sensor_h
 #define HIH6100_Sensor_h
