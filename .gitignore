@@ -16,3 +16,6 @@
 *.exe
 *.out
 *.app
+
+# OBJC, iOS SDK
+xcuserdata/
