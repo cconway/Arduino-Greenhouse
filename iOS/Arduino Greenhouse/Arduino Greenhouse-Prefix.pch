@@ -11,14 +11,16 @@
 #endif
 
 #ifdef __OBJC__
-    #import <UIKit/UIKit.h>
-    #import <Foundation/Foundation.h>
+#import <UIKit/UIKit.h>
+#import <Foundation/Foundation.h>
 #endif
 
 
 
 #define CBCentralManagerIdentifier @"com.ChasConway.temperatureAlarm"
 
+// NSUserDefaults keys
+#define PreviouslyConnectedPeripheralUUID @"com.ChasConway.ArduinoGreenhouse.previouslyConnectedPeripheralUUID"
 #define AlarmThresholdUserDefaultKey @"com.ChasConway.temperatureAlarm.alarmThreshold"
 
 // Arduino Constants
@@ -30,6 +32,7 @@
 // TO-DO: Move this to a common file imported by both Arduino and XCode
 #define UNAVAILABLE_f -12345.678f  // Used for indicating a value has become unavailable
 #define UNAVAILABLE_u -1234  // Used for indicating a value has become unavailable
+// TODO: Suffix shouldn't be "u" because it's not unsigned
 
 #define VENT_DOOR_OPEN 20  // servo angle
 #define VENT_DOOR_CLOSED 125  // servo angle

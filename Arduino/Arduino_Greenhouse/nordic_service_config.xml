@@ -397,6 +397,27 @@
             <PeriodForProperties/>
         </Characteristic>
         <Characteristic>
+            <Name>Venting Necessity Target</Name>
+            <Uuid BaseUUID="E8CC000055E30B6440F8B2F289661BDA" BaseUUIDName="Custom Thermometer">0112</Uuid>
+            <DefaultValue></DefaultValue>
+            <UsePresentationFormat>0</UsePresentationFormat>
+            <MaxDataLength>4</MaxDataLength>
+            <AttributeLenType>1</AttributeLenType>
+            <ForceOpen>false</ForceOpen>
+            <Properties>
+                <WriteWithoutResponse>false</WriteWithoutResponse>
+                <Write>true</Write>
+                <Notify>false</Notify>
+                <Indicate>false</Indicate>
+                <Broadcast>false</Broadcast>
+            </Properties>
+            <SetPipe>true</SetPipe>
+            <AckIsAuto>true</AckIsAuto>
+            <PresentationFormatDescriptor Value="0000" Exponent="0" Format="1" NameSpace="01" Unit="0000"/>
+            <PeriodForReadingThisCharacteristic>0</PeriodForReadingThisCharacteristic>
+            <PeriodForProperties/>
+        </Characteristic>
+        <Characteristic>
             <Name>Illumination On Time</Name>
             <Uuid BaseUUID="E8CC000055E30B6440F8B2F289661BDA" BaseUUIDName="Custom Thermometer">0108</Uuid>
             <DefaultValue></DefaultValue>
@@ -419,7 +440,7 @@
         </Characteristic>
         <Characteristic>
             <Name>Illumination Off Time</Name>
-            <Uuid BaseUUID="E8CC000055E30B6440F8B2F289661BDA" BaseUUIDName="Custom Thermometer">0109</Uuid>
+            <Uuid>0109</Uuid>
             <DefaultValue></DefaultValue>
             <UsePresentationFormat>0</UsePresentationFormat>
             <MaxDataLength>2</MaxDataLength>
@@ -453,22 +474,22 @@
         <MinimumKeySize>7</MinimumKeySize>
         <MaximumKeySize>16</MaximumKeySize>
         <AdvertisingDataBondedBitmap>10</AdvertisingDataBondedBitmap>
-        <AdvertisingDataGeneralBitmap>a</AdvertisingDataGeneralBitmap>
-        <AdvertisingDataBrodcastBitmap>10</AdvertisingDataBrodcastBitmap>
-        <AdvertisingDataBondedScanResponseBitmap>0</AdvertisingDataBondedScanResponseBitmap>
-        <AdvertisingDataGeneralScanResponseBitmap>0</AdvertisingDataGeneralScanResponseBitmap>
+        <AdvertisingDataGeneralBitmap>4a</AdvertisingDataGeneralBitmap>
+        <AdvertisingDataBrodcastBitmap>0</AdvertisingDataBrodcastBitmap>
+        <AdvertisingDataBondedScanResponseBitmap>10</AdvertisingDataBondedScanResponseBitmap>
+        <AdvertisingDataGeneralScanResponseBitmap>a</AdvertisingDataGeneralScanResponseBitmap>
         <AdvertisingDataBrodcastScanResponseBitmap>0</AdvertisingDataBrodcastScanResponseBitmap>
         <AdvertisingDataBondedBitmapCustom>0</AdvertisingDataBondedBitmapCustom>
         <AdvertisingDataGeneralBitmapCustom>0</AdvertisingDataGeneralBitmapCustom>
         <AdvertisingDataBrodcastBitmapCustom>0</AdvertisingDataBrodcastBitmapCustom>
         <AdvertisingDataBondedScanResponseBitmapCustom>0</AdvertisingDataBondedScanResponseBitmapCustom>
-        <AdvertisingDataGeneralScanResponseBitmapCustom>1</AdvertisingDataGeneralScanResponseBitmapCustom>
+        <AdvertisingDataGeneralScanResponseBitmapCustom>0</AdvertisingDataGeneralScanResponseBitmapCustom>
         <AdvertisingDataBrodcastScanResponseBitmapCustom>0</AdvertisingDataBrodcastScanResponseBitmapCustom>
         <TxPowerLevelOffset>0</TxPowerLevelOffset>
-        <MinimumConnectionInterval>10</MinimumConnectionInterval>
-        <MaximumConnectionInterval>18</MaximumConnectionInterval>
-        <SlaveLatency>0</SlaveLatency>
-        <TimeoutMultipler>10</TimeoutMultipler>
+        <MinimumConnectionInterval>16</MinimumConnectionInterval>
+        <MaximumConnectionInterval>122</MaximumConnectionInterval>
+        <SlaveLatency>2</SlaveLatency>
+        <TimeoutMultipler>138</TimeoutMultipler>
         <AddServiceUpdateCharacteristic>false</AddServiceUpdateCharacteristic>
         <AddServiceUpdateCharacteristicPipe>false</AddServiceUpdateCharacteristicPipe>
         <ServiceToAdvertise>

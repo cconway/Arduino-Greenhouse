@@ -7,6 +7,8 @@
 
 #include "lib_ble.h"
 
+#define ADVERTISING_INTERVAL 0x0020  // ms
+
 // ----------------------------------------------------
 // lib_aci Interaction
 // NOTE: Tried to separate this into a separate file but had
@@ -115,7 +117,7 @@ void aci_setup(void)
 	aci_state.aci_pins.optional_chip_sel_pin = UNUSED;
 
 	aci_state.aci_pins.interface_is_interrupt	  = false;
-	aci_state.aci_pins.interrupt_number			  = 1;
+	aci_state.aci_pins.interrupt_number		  = 1;
 
         // Turn debug printing on for the ACI Commands and Events to be printed on the Serial
 	lib_aci_debug_print(false);
@@ -123,11 +125,12 @@ void aci_setup(void)
 	//We reset the nRF8001 here by toggling the RESET line connected to the nRF8001
 	//If the RESET line is not available we call the ACI Radio Reset to soft reset the nRF8001
 	//then we initialize the data structures required to setup the nRF8001
-	lib_aci_init(&aci_state);
 
-        delay(100);
+        delay(50);
         lib_aci_radio_reset();
-        delay(100); 
+        delay(50); 
+        
+        lib_aci_init(&aci_state);
 }
 
 void aci_loop()
@@ -169,7 +172,7 @@ void aci_loop()
               }
               else
               {
-              lib_aci_connect(0/* in seconds : 0 means forever */, 0x0050 /* advertising interval 50ms*/);
+              lib_aci_connect(0/* in seconds : 0 means forever */, ADVERTISING_INTERVAL /* advertising interval 50ms*/);
 //              Serial.println(F("Advertising started : Tap Connect on the nRF UART app"));
               }
               
@@ -239,7 +242,7 @@ void aci_loop()
         
       case ACI_EVT_DISCONNECTED:
         Serial.println(F("Evt Disconnected/Advertising timed out"));
-        lib_aci_connect(0/* in seconds  : 0 means forever */, 0x0050 /* advertising interval 50ms*/);
+        lib_aci_connect(0/* in seconds  : 0 means forever */, ADVERTISING_INTERVAL /* advertising interval 50ms*/);
 //        Serial.println(F("Advertising started"));        
         break;
         
@@ -312,7 +315,7 @@ void aci_loop()
         Serial.write(aci_evt->params.hw_error.file_name[counter]); //uint8_t file_name[20];
         }
         Serial.println();
-        lib_aci_connect(0/* in seconds, 0 means forever */, 0x0050 /* advertising interval 50ms*/);
+        lib_aci_connect(0/* in seconds, 0 means forever */, ADVERTISING_INTERVAL /* advertising interval 50ms*/);
 //        Serial.println(F("Advertising started. Tap Connect on the nRF UART app"));
         break;
            

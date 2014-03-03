@@ -396,6 +396,12 @@ void handleACIEvent(aci_state_t *aci_state, aci_evt_t *aci_evt) {
     
       break;
     }
+    
+    case ACI_EVT_CONNECTED: {
+      
+        BLE_board.timing_change_done = false;
+        break;
+    }
   
     case ACI_EVT_DATA_RECEIVED: {  // One of the writeable pipes (for a Characteristic) has received data
       
@@ -427,6 +433,18 @@ void handleACIEvent(aci_state_t *aci_state, aci_evt_t *aci_evt) {
         BLE_board._data_credit_pending = false;  // NOTE: Added while tracking down hang, don't want waitForDataCredit() to hang even though we got credit
       }
       break;
+    }
+    
+    case ACI_EVT_PIPE_STATUS: {  //
+    
+        if (lib_aci_is_pipe_available(aci_state, PIPE_GREENHOUSE_MEASUREMENTS_EXTERIOR_HUMIDITY_TX) && (BLE_board.timing_change_done == false)) {
+          
+          lib_aci_change_timing_GAP_PPCP(); // change the timing on the link as specified in the nRFgo studio -> nRF8001 conf. -> GAP. 
+                                            // Used to increase or decrease bandwidth
+          BLE_board.timing_change_done = true;
+        }
+        
+        break;
     }
     
     default: {

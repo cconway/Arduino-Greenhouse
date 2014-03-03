@@ -35,6 +35,7 @@ typedef NS_ENUM(UInt8, ClimateState) {
 	
 	BOOL _isScanning;
 	BOOL _isInteractionSetup;
+	BOOL _previousPeripheralAttempt;
 }
 
 @property (strong, nonatomic) CBPeripheral *blePeripheral;
@@ -77,12 +78,12 @@ typedef NS_ENUM(UInt8, ClimateState) {
 	
 	[super viewDidLoad];
 	
-//	if (self.bleCentral == nil) self.bleCentral = [[CBCentralManager alloc] initWithDelegate:self queue:nil options:@{CBCentralManagerOptionRestoreIdentifierKey:CBCentralManagerIdentifier}];
+	//	if (self.bleCentral == nil) self.bleCentral = [[CBCentralManager alloc] initWithDelegate:self queue:nil options:@{CBCentralManagerOptionRestoreIdentifierKey:CBCentralManagerIdentifier}];
 	self.bleCentral = [[CBCentralManager alloc] initWithDelegate:self queue:nil];
-
+	
 	[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(appBecameActive:) name:UIApplicationDidBecomeActiveNotification object:nil];
 	[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(appEnteredBackround:) name:UIApplicationDidEnterBackgroundNotification object:nil];
-
+	
 	[self bootstrapModel];
 }
 
@@ -90,68 +91,68 @@ typedef NS_ENUM(UInt8, ClimateState) {
 	
 	// Setup Dynamic TableView section descriptors
 	self.sectionDescriptors = @[({
-									TableSectionDescriptor *sectionDescriptor = [TableSectionDescriptor new];
-									sectionDescriptor.sectionName = @"Greenhouse State";
-									sectionDescriptor.rowCount = @1;
-									sectionDescriptor.rowDescriptors = @[
-																		 ({
-																			 TableRowDescriptor *rowDescriptor = [TableRowDescriptor new];
-																			 rowDescriptor.cellReuseIdentifier = @"LabelCell";
-																			 rowDescriptor.modelObject = VENTING_NECESSITY_CHARACTERISTIC_UUID;
-																			 rowDescriptor.configureCellFromModelBlock = ^(UITableViewCell *cell, id modelObject) {
-																				 
-																				 UILabel *titleLabel = (UILabel *)[cell.contentView viewWithTag:CELL_TITLE_LABEL_TAG];
-																				 UILabel *valueLabel = (UILabel *)[cell.contentView viewWithTag:CELL_VALUE_LABEL_TAG];
-																				 NSNumber *value = self.greenhouseValues[modelObject];
-																				 
-																				 // Configure Cell
-																				 titleLabel.text = NSLocalizedString(@"Venting Necessity", @"Cell title label");
-																				 valueLabel.text = [_floatFormatter stringForObjectValue:value];
-																			 };
-																			 rowDescriptor;
-																		 }),
-																		 ({
-																			 TableRowDescriptor *rowDescriptor = [TableRowDescriptor new];
-																			 rowDescriptor.cellReuseIdentifier = @"LabelCell";
-																			 rowDescriptor.modelObject = VENTING_NECESS_TARGET_CHARACTERISTIC_UUID;
-																			 rowDescriptor.configureCellFromModelBlock = ^(UITableViewCell *cell, id modelObject) {
-																				 
-																				 UILabel *titleLabel = (UILabel *)[cell.contentView viewWithTag:CELL_TITLE_LABEL_TAG];
-																				 UILabel *valueLabel = (UILabel *)[cell.contentView viewWithTag:CELL_VALUE_LABEL_TAG];
-																				 NSNumber *value = self.greenhouseValues[modelObject];
-																				 
-																				 // Configure Cell
-																				 titleLabel.text = NSLocalizedString(@"Venting Necessity Target", @"Cell title label");
-																				 valueLabel.text = [_floatFormatter stringForObjectValue:value];
-																			 };
-																			 rowDescriptor;
-																		 }),
-																		 ({
-																			 TableRowDescriptor *rowDescriptor = [TableRowDescriptor new];
-																			 rowDescriptor.cellReuseIdentifier = @"LabelCell";
-																			 rowDescriptor.modelObject = CONTROL_STATE_CHARACTERISTIC_UUID;
-																			 rowDescriptor.configureCellFromModelBlock = ^(UITableViewCell *cell, id modelObject) {
-																				 
-																				 UILabel *titleLabel = (UILabel *)[cell.contentView viewWithTag:CELL_TITLE_LABEL_TAG];
-																				 UILabel *valueLabel = (UILabel *)[cell.contentView viewWithTag:CELL_VALUE_LABEL_TAG];
-																				 NSNumber *value = self.greenhouseValues[modelObject];
-																				 
-																				 // Configure Cell
-																				 titleLabel.text = NSLocalizedString(@"Control State", @"Cell title label");
-																				 NSString *stateLabel = @"---";
-																				 
-																				 if (value) switch (value.integerValue) {
-																					 case ClimateStateSteady: stateLabel = NSLocalizedString(@"Steady", @"Cell value label"); break;
-																					 case ClimateStateDecreasingHumidity: stateLabel = NSLocalizedString(@"Lowering Humidity", @"Cell value label"); break;
-																					 default: stateLabel = @"---"; break;
-																				 }
-																				 valueLabel.text = stateLabel;
-																			 };
-																			 rowDescriptor;
-																		 })
-																		 ];
-									sectionDescriptor;
-								}),
+		TableSectionDescriptor *sectionDescriptor = [TableSectionDescriptor new];
+		sectionDescriptor.sectionName = @"Greenhouse State";
+		sectionDescriptor.rowCount = @1;
+		sectionDescriptor.rowDescriptors = @[
+											 ({
+												 TableRowDescriptor *rowDescriptor = [TableRowDescriptor new];
+												 rowDescriptor.cellReuseIdentifier = @"LabelCell";
+												 rowDescriptor.modelObject = VENTING_NECESSITY_CHARACTERISTIC_UUID;
+												 rowDescriptor.configureCellFromModelBlock = ^(UITableViewCell *cell, id modelObject) {
+													 
+													 UILabel *titleLabel = (UILabel *)[cell.contentView viewWithTag:CELL_TITLE_LABEL_TAG];
+													 UILabel *valueLabel = (UILabel *)[cell.contentView viewWithTag:CELL_VALUE_LABEL_TAG];
+													 NSNumber *value = self.greenhouseValues[modelObject];
+													 
+													 // Configure Cell
+													 titleLabel.text = NSLocalizedString(@"Venting Necessity", @"Cell title label");
+													 valueLabel.text = [_floatFormatter stringForObjectValue:value];
+												 };
+												 rowDescriptor;
+											 }),
+											 ({
+												 TableRowDescriptor *rowDescriptor = [TableRowDescriptor new];
+												 rowDescriptor.cellReuseIdentifier = @"LabelCell";
+												 rowDescriptor.modelObject = VENTING_NECESS_TARGET_CHARACTERISTIC_UUID;
+												 rowDescriptor.configureCellFromModelBlock = ^(UITableViewCell *cell, id modelObject) {
+													 
+													 UILabel *titleLabel = (UILabel *)[cell.contentView viewWithTag:CELL_TITLE_LABEL_TAG];
+													 UILabel *valueLabel = (UILabel *)[cell.contentView viewWithTag:CELL_VALUE_LABEL_TAG];
+													 NSNumber *value = self.greenhouseValues[modelObject];
+													 
+													 // Configure Cell
+													 titleLabel.text = NSLocalizedString(@"Venting Necessity Target", @"Cell title label");
+													 valueLabel.text = [_floatFormatter stringForObjectValue:value];
+												 };
+												 rowDescriptor;
+											 }),
+											 ({
+												 TableRowDescriptor *rowDescriptor = [TableRowDescriptor new];
+												 rowDescriptor.cellReuseIdentifier = @"LabelCell";
+												 rowDescriptor.modelObject = CONTROL_STATE_CHARACTERISTIC_UUID;
+												 rowDescriptor.configureCellFromModelBlock = ^(UITableViewCell *cell, id modelObject) {
+													 
+													 UILabel *titleLabel = (UILabel *)[cell.contentView viewWithTag:CELL_TITLE_LABEL_TAG];
+													 UILabel *valueLabel = (UILabel *)[cell.contentView viewWithTag:CELL_VALUE_LABEL_TAG];
+													 NSNumber *value = self.greenhouseValues[modelObject];
+													 
+													 // Configure Cell
+													 titleLabel.text = NSLocalizedString(@"Control State", @"Cell title label");
+													 NSString *stateLabel = @"---";
+													 
+													 if (value) switch (value.integerValue) {
+														 case ClimateStateSteady: stateLabel = NSLocalizedString(@"Steady", @"Cell value label"); break;
+														 case ClimateStateDecreasingHumidity: stateLabel = NSLocalizedString(@"Lowering Humidity", @"Cell value label"); break;
+														 default: stateLabel = @"---"; break;
+													 }
+													 valueLabel.text = stateLabel;
+												 };
+												 rowDescriptor;
+											 })
+											 ];
+		sectionDescriptor;
+	}),
 								({
 									TableSectionDescriptor *sectionDescriptor = [TableSectionDescriptor new];
 									sectionDescriptor.sectionName = @"Measurements";
@@ -248,11 +249,11 @@ typedef NS_ENUM(UInt8, ClimateState) {
 																				 aSwitch.on = (value.integerValue == VENT_FLAP_OPEN);
 																				 
 																			 };
-//																			 rowDescriptor.updateModelFromCellBlock = ^(UITableViewCell *cell, id modelObject) {
-//																				 
-//																				 UISwitch *aSwitch = (UISwitch *)[cell.contentView viewWithTag:CELL_SWITCH_TAG];
-//																				 [modelObject setValue:@((aSwitch.on) ? VENT_FLAP_OPEN : VENT_FLAP_CLOSED) forKey:VENT_FLAP_CHARACTERISTIC_UUID];
-//																			 };
+																			 //																			 rowDescriptor.updateModelFromCellBlock = ^(UITableViewCell *cell, id modelObject) {
+																			 //
+																			 //																				 UISwitch *aSwitch = (UISwitch *)[cell.contentView viewWithTag:CELL_SWITCH_TAG];
+																			 //																				 [modelObject setValue:@((aSwitch.on) ? VENT_FLAP_OPEN : VENT_FLAP_CLOSED) forKey:VENT_FLAP_CHARACTERISTIC_UUID];
+																			 //																			 };
 																			 rowDescriptor;
 																		 }),
 																		 ({
@@ -273,11 +274,11 @@ typedef NS_ENUM(UInt8, ClimateState) {
 																				 aSwitch.userInteractionEnabled = NO;
 																				 
 																			 };
-//																			 rowDescriptor.updateModelFromCellBlock = ^(UITableViewCell *cell, id modelObject) {
-//																				 
-//																				 UISwitch *aSwitch = (UISwitch *)[cell.contentView viewWithTag:CELL_SWITCH_TAG];
-//																				 [modelObject setValue:@((aSwitch.on) ? VENT_FLAP_OPEN : VENT_FLAP_CLOSED) forKey:LIGHTBANK_1_CHARACTERISTIC_UUID];
-//																			 };
+																			 //																			 rowDescriptor.updateModelFromCellBlock = ^(UITableViewCell *cell, id modelObject) {
+																			 //
+																			 //																				 UISwitch *aSwitch = (UISwitch *)[cell.contentView viewWithTag:CELL_SWITCH_TAG];
+																			 //																				 [modelObject setValue:@((aSwitch.on) ? VENT_FLAP_OPEN : VENT_FLAP_CLOSED) forKey:LIGHTBANK_1_CHARACTERISTIC_UUID];
+																			 //																			 };
 																			 rowDescriptor;
 																		 }),
 																		 ({
@@ -298,11 +299,11 @@ typedef NS_ENUM(UInt8, ClimateState) {
 																				 aSwitch.userInteractionEnabled = NO;
 																				 
 																			 };
-//																			 rowDescriptor.updateModelFromCellBlock = ^(UITableViewCell *cell, id modelObject) {
-//																				 
-//																				 UISwitch *aSwitch = (UISwitch *)[cell.contentView viewWithTag:CELL_SWITCH_TAG];
-//																				 [modelObject setValue:@((aSwitch.on) ? VENT_FLAP_OPEN : VENT_FLAP_CLOSED) forKey:LIGHTBANK_1_CHARACTERISTIC_UUID];
-//																			 };
+																			 //																			 rowDescriptor.updateModelFromCellBlock = ^(UITableViewCell *cell, id modelObject) {
+																			 //
+																			 //																				 UISwitch *aSwitch = (UISwitch *)[cell.contentView viewWithTag:CELL_SWITCH_TAG];
+																			 //																				 [modelObject setValue:@((aSwitch.on) ? VENT_FLAP_OPEN : VENT_FLAP_CLOSED) forKey:LIGHTBANK_1_CHARACTERISTIC_UUID];
+																			 //																			 };
 																			 rowDescriptor;
 																		 })
 																		 ];
@@ -632,9 +633,7 @@ typedef NS_ENUM(UInt8, ClimateState) {
 		
 	} else {  // Not connected & not scanning
 		
-		self.connectButton.selected = YES;
-		
-		[self scanForDevices];
+		[self tryToEstablishConnection];
 	}
 }
 
@@ -649,7 +648,7 @@ typedef NS_ENUM(UInt8, ClimateState) {
 		
 		if (rowDescriptor.updateModelFromCellBlock) rowDescriptor.updateModelFromCellBlock(tappedCell, rowDescriptor.modelObject);
 		
-//		[self.tableView reloadRowsAtIndexPaths:@[indexPath] withRowAnimation:UITableViewRowAnimationNone];
+		//		[self.tableView reloadRowsAtIndexPaths:@[indexPath] withRowAnimation:UITableViewRowAnimationNone];
 	}
 }
 
@@ -674,7 +673,7 @@ typedef NS_ENUM(UInt8, ClimateState) {
 - (IBAction)didStopDraggingSlider:(id)sender {
 	
 	if (self.blePeripheral.state == CBPeripheralStateConnected) {
-	
+		
 		UITableViewCell *tappedCell = [((UIView *)sender) parentTableViewCell];
 		
 		if (tappedCell) {
@@ -725,7 +724,7 @@ typedef NS_ENUM(UInt8, ClimateState) {
 		
 		[self setNotificationForCharacteristics:[self.blePeripheral allCharacteristics] enabled:YES];
 		[self readValueForCharacteristics:[self.blePeripheral allCharacteristics]];
-	
+		
 	} else if (self.bleCentral.state == CBCentralManagerStatePoweredOn) {
 		
 		[self didTapConnectButton:nil];
@@ -770,11 +769,39 @@ typedef NS_ENUM(UInt8, ClimateState) {
 	//	}
 }
 
+- (void)tryToEstablishConnection {
+	
+	NSString *UUIDString = [[NSUserDefaults standardUserDefaults] stringForKey:PreviouslyConnectedPeripheralUUID];
+	
+	if (UUIDString) {  // We've previously connected to a device
+		
+		CBUUID *peripheralUUID = [CBUUID UUIDWithString:UUIDString];
+		NSArray *peripherals = [self.bleCentral retrievePeripheralsWithIdentifiers:@[peripheralUUID]];
+		
+		if (peripherals.count > 0) {  // iOS has a record for our device cached
+			
+			NSLog(@"Attempting to reconnect to a remembered peripheral");
+			
+			_previousPeripheralAttempt = YES;
+			[self connectToPeripheral:peripherals.firstObject];
+		}
+		
+	} else {  // No memory of previously connected devices
+		
+		[self scanForDevices];
+	}
+}
+
 - (void)scanForDevices {
 	
 	if (_isScanning == NO) {  // Don't continue if we're already scanning
 		
-//		[self.activityIndicator startAnimating];
+		NSLog(@"Scanning for available peripherals...");
+		
+		_previousPeripheralAttempt = NO;
+		
+		//		[self.activityIndicator startAnimating];
+		self.connectButton.selected = YES;
 		
 		_isScanning = YES;
 		
@@ -797,7 +824,7 @@ typedef NS_ENUM(UInt8, ClimateState) {
 	
 	self.connectButton.selected = NO;
 	
-//	[self.activityIndicator stopAnimating];
+	//	[self.activityIndicator stopAnimating];
 	
 	_isScanning = NO;
 }
@@ -868,7 +895,7 @@ typedef NS_ENUM(UInt8, ClimateState) {
 	for (CBCharacteristic *aCharacteristic in characteristics) {
 		
 		if ((aCharacteristic.properties & CBCharacteristicPropertyRead) == CBCharacteristicPropertyRead) {  // Check that Characteristic supports 'Notify'
-
+			
 			[self.blePeripheral readValueForCharacteristic:aCharacteristic];
 			
 		}
@@ -917,18 +944,18 @@ typedef NS_ENUM(UInt8, ClimateState) {
 }
 
 /*
-- (void)centralManager:(CBCentralManager *)central willRestoreState:(NSDictionary *)dict {
-	
-	NSArray *peripherals = dict[CBCentralManagerRestoredStatePeripheralsKey];
-	
-	if (peripherals.count > 0) {
-		
-		NSLog(@"Attempting connection to restored CBPeripheral");
-		[self connectToPeripheral:peripherals[0]];
-		
-	} else NSLog(@"Restored CentralManager had no peripherals");
-}
-*/
+ - (void)centralManager:(CBCentralManager *)central willRestoreState:(NSDictionary *)dict {
+ 
+ NSArray *peripherals = dict[CBCentralManagerRestoredStatePeripheralsKey];
+ 
+ if (peripherals.count > 0) {
+ 
+ NSLog(@"Attempting connection to restored CBPeripheral");
+ [self connectToPeripheral:peripherals[0]];
+ 
+ } else NSLog(@"Restored CentralManager had no peripherals");
+ }
+ */
 
 - (void)centralManager:(CBCentralManager *)central didDiscoverPeripheral:(CBPeripheral *)peripheral advertisementData:(NSDictionary *)advertisementData RSSI:(NSNumber *)RSSI {
 	
@@ -943,6 +970,14 @@ typedef NS_ENUM(UInt8, ClimateState) {
 	
 	[self.connectButton setTitle:@"Disconnect" forState:UIControlStateNormal];
 	[self.connectButton setTitle:@"Disconnecting..." forState:UIControlStateSelected];
+	
+	if (_previousPeripheralAttempt) NSLog(@"Re-connected to previous peripheral");
+	else NSLog(@"Connected to peripheral found during scan");
+	
+	// Store the peripherials 'identifier' UUID so we can try to reconnect later
+	[[NSUserDefaults standardUserDefaults] setValue:peripheral.identifier.UUIDString forKey:PreviouslyConnectedPeripheralUUID];
+	[[NSUserDefaults standardUserDefaults] synchronize];
+	
 	
 	[peripheral discoverServices:nil];  // Discover all services
 	
@@ -972,6 +1007,13 @@ typedef NS_ENUM(UInt8, ClimateState) {
 	
 	[self.connectButton setTitle:@"Connect" forState:UIControlStateNormal];
 	[self.connectButton setTitle:@"Scanning..." forState:UIControlStateSelected];
+	
+	if (_previousPeripheralAttempt == YES) {  // Attempt to connect to a remembered peripheral failed
+		
+		NSLog(@"Attempt to connect to previously used peripheral failed, falling back to scanning...");
+		
+		[self scanForDevices];
+	}
 }
 
 
@@ -1018,7 +1060,7 @@ typedef NS_ENUM(UInt8, ClimateState) {
 			[characteristic.value getBytes:&intValue length:characteristic.value.length];
 			
 			[self.greenhouseValues setValue:@(intValue) forKey:characteristic.UUID.UUIDString];
-						
+			
 			break;
 		}
 			
@@ -1027,7 +1069,8 @@ typedef NS_ENUM(UInt8, ClimateState) {
 			SInt16 intValue;
 			[characteristic.value getBytes:&intValue length:characteristic.value.length];
 			
-			[self.greenhouseValues setValue:@(intValue) forKey:characteristic.UUID.UUIDString];
+			if (intValue == UNAVAILABLE_u) [self.greenhouseValues removeObjectForKey:characteristic.UUID.UUIDString];
+			else [self.greenhouseValues setValue:@(intValue) forKey:characteristic.UUID.UUIDString];
 			
 			break;
 		}
@@ -1046,14 +1089,14 @@ typedef NS_ENUM(UInt8, ClimateState) {
 	
 	[self.tableView reloadRowsAtIndexPaths:indexPaths withRowAnimation:UITableViewRowAnimationNone];
 	
-	 /*
+	/*
 	 if ([UIApplication sharedApplication].applicationState == UIApplicationStateBackground) {
 	 
-		 UILocalNotification *localNotification = [UILocalNotification new];
-		 localNotification.alertBody = @"Temperture Alert!";//[NSString stringWithFormat:@"Temperature is %1.0f°", incomingPacket->temperature];
-		 localNotification.soundName = UILocalNotificationDefaultSoundName;
-		 
-		 [[UIApplication sharedApplication] presentLocalNotificationNow:localNotification];
+	 UILocalNotification *localNotification = [UILocalNotification new];
+	 localNotification.alertBody = @"Temperture Alert!";//[NSString stringWithFormat:@"Temperature is %1.0f°", incomingPacket->temperature];
+	 localNotification.soundName = UILocalNotificationDefaultSoundName;
+	 
+	 [[UIApplication sharedApplication] presentLocalNotificationNow:localNotification];
 	 }
 	 */
 }
@@ -1061,8 +1104,11 @@ typedef NS_ENUM(UInt8, ClimateState) {
 - (void)peripheral:(CBPeripheral *)peripheral didWriteValueForCharacteristic:(CBCharacteristic *)characteristic error:(NSError *)error {
 	
 	// NOTE: Called only for WRITE WITH RESPONSE (i.e. ACK'd)
-	if (error) NSLog(@"BLE write failed: %@", error);
-//	else NSLog(@"Got confirmation of WRITE");
+	if (error) {
+		
+		NSLog(@"BLE write failed: %@", error);
+	}
+	//	else NSLog(@"Got confirmation of WRITE");
 }
 
 @end

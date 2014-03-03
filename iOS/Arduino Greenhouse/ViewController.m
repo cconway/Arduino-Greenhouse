@@ -175,8 +175,8 @@
 		_isScanning = YES;
 				
 		NSArray *serviceUUIDs = @[[CBUUID UUIDWithString:USER_ADJUSTMENTS_SERVICE_UUID]];
-//		[self.bleCentral scanForPeripheralsWithServices:serviceUUIDs options:nil];
-		[self.bleCentral scanForPeripheralsWithServices:nil options:nil];
+		[self.bleCentral scanForPeripheralsWithServices:serviceUUIDs options:nil];
+//		[self.bleCentral scanForPeripheralsWithServices:nil options:nil];
 		
 		_scanTimer = [NSTimer scheduledTimerWithTimeInterval:SCAN_DURATION_SECONDS target:self selector:@selector(blePeripheralScanTimedOut:) userInfo:nil repeats:NO];
 	}

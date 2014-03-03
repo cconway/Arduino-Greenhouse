@@ -34,7 +34,8 @@ class BLE {
     void ble_loop(void); 
  
     byte _aci_cmd_pending;
-    byte _data_credit_pending;   
+    byte _data_credit_pending;
+    boolean timing_change_done;  
     
   private:
     
