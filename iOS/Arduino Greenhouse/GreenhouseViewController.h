@@ -17,6 +17,7 @@
 #define CELL_SWITCH_TAG 3
 #define CELL_SLIDER_TAG 4
 #define CELL_TEXT_FIELD_TAG 5
+#define CELL_ALT_VALUE_LABEL 6
 
 @interface GreenhouseViewController : DynamicTableViewController <CBCentralManagerDelegate, CBPeripheralDelegate>
 

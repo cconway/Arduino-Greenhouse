@@ -64,8 +64,8 @@ typedef NS_ENUM(UInt8, ClimateState) {
 	_temperatureFormatter = [NSNumberFormatter new];
 	[_temperatureFormatter setNumberStyle:NSNumberFormatterDecimalStyle];
 	[_temperatureFormatter setMaximumFractionDigits:2];
-	[_temperatureFormatter setPositiveSuffix:@" °F"];
-	[_temperatureFormatter setNegativeSuffix:@" °F"];
+	[_temperatureFormatter setPositiveSuffix:@"°F"];
+	[_temperatureFormatter setNegativeSuffix:@"°F"];
 	[_temperatureFormatter setNilSymbol:@"---"];
 	
 	_floatFormatter = [NSNumberFormatter new];
@@ -97,17 +97,20 @@ typedef NS_ENUM(UInt8, ClimateState) {
 		sectionDescriptor.rowDescriptors = @[
 											 ({
 												 TableRowDescriptor *rowDescriptor = [TableRowDescriptor new];
-												 rowDescriptor.cellReuseIdentifier = @"LabelCell";
+												 rowDescriptor.cellReuseIdentifier = @"DualLabelCell";
 												 rowDescriptor.modelObject = VENTING_NECESSITY_CHARACTERISTIC_UUID;
 												 rowDescriptor.configureCellFromModelBlock = ^(UITableViewCell *cell, id modelObject) {
 													 
 													 UILabel *titleLabel = (UILabel *)[cell.contentView viewWithTag:CELL_TITLE_LABEL_TAG];
 													 UILabel *valueLabel = (UILabel *)[cell.contentView viewWithTag:CELL_VALUE_LABEL_TAG];
+													 UILabel *limitLabel = (UILabel *)[cell.contentView viewWithTag:CELL_ALT_VALUE_LABEL];
 													 NSNumber *value = self.greenhouseValues[modelObject];
+													 NSNumber *thresholdValue = self.greenhouseValues[VENTING_NECESS_THRESHOLD_CHARACTERISTIC_UUID];
 													 
 													 // Configure Cell
 													 titleLabel.text = NSLocalizedString(@"Venting Necessity", @"Cell title label");
 													 valueLabel.text = [_floatFormatter stringForObjectValue:value];
+													 limitLabel.text = [NSString stringWithFormat:@"(%@ max)", [_floatFormatter stringForObjectValue:thresholdValue]];
 												 };
 												 rowDescriptor;
 											 }),
@@ -176,17 +179,21 @@ typedef NS_ENUM(UInt8, ClimateState) {
 																		 }),
 																		 ({
 																			 TableRowDescriptor *rowDescriptor = [TableRowDescriptor new];
-																			 rowDescriptor.cellReuseIdentifier = @"LabelCell";
+																			 rowDescriptor.cellReuseIdentifier = @"DualLabelCell";
 																			 rowDescriptor.modelObject = INTERIOR_HUMIDITY_CHARACTERISTIC_UUID;
 																			 rowDescriptor.configureCellFromModelBlock = ^(UITableViewCell *cell, id modelObject) {
 																				 
 																				 UILabel *titleLabel = (UILabel *)[cell.contentView viewWithTag:CELL_TITLE_LABEL_TAG];
 																				 UILabel *valueLabel = (UILabel *)[cell.contentView viewWithTag:CELL_VALUE_LABEL_TAG];
+																				 UILabel *limitLabel = (UILabel *)[cell.contentView viewWithTag:CELL_ALT_VALUE_LABEL];
 																				 NSNumber *value = self.greenhouseValues[modelObject];
+																				 
+																				 
 																				 
 																				 // Configure Cell
 																				 titleLabel.text = NSLocalizedString(@"Interior Humidity", @"Cell title label");
 																				 valueLabel.text = [_humidityFormatter stringForObjectValue:value];
+																				 limitLabel.text = [NSString stringWithFormat:@"(%@ max)", [_humidityFormatter stringForObjectValue:[self maxAllowedHumidity]]];
 																			 };
 																			 rowDescriptor;
 																		 }),
@@ -209,18 +216,23 @@ typedef NS_ENUM(UInt8, ClimateState) {
 																		 }),
 																		 ({
 																			 TableRowDescriptor *rowDescriptor = [TableRowDescriptor new];
-																			 rowDescriptor.cellReuseIdentifier = @"LabelCell";
+																			 rowDescriptor.cellReuseIdentifier = @"DualLabelCell";
 																			 rowDescriptor.modelObject = INTERIOR_TEMPERATURE_CHARACTERISTIC_UUID;
 																			 rowDescriptor.configureCellFromModelBlock = ^(UITableViewCell *cell, id modelObject) {
 																				 
 																				 UILabel *titleLabel = (UILabel *)[cell.contentView viewWithTag:CELL_TITLE_LABEL_TAG];
 																				 UILabel *valueLabel = (UILabel *)[cell.contentView viewWithTag:CELL_VALUE_LABEL_TAG];
+																				 UILabel *limitLabel = (UILabel *)[cell.contentView viewWithTag:CELL_ALT_VALUE_LABEL];
+																				 
 																				 NSNumber *celciusValue = self.greenhouseValues[modelObject];
 																				 NSNumber *fahrenheitValue = [[NSValueTransformer valueTransformerForName:@"CelciusToFahrenheitTransformer"] transformedValue:celciusValue];
+																				 
+																				 NSNumber *fahrenheitMaxValue = [[NSValueTransformer valueTransformerForName:@"CelciusToFahrenheitTransformer"] transformedValue:[self maxAllowedTemperature]];
 																				 
 																				 // Configure Cell
 																				 titleLabel.text = NSLocalizedString(@"Interior Temperature", @"Cell title label");
 																				 valueLabel.text = [_temperatureFormatter stringForObjectValue:fahrenheitValue];
+																				 limitLabel.text = [NSString stringWithFormat:@"(%@ max)", [_temperatureFormatter stringForObjectValue:fahrenheitMaxValue]];
 																			 };
 																			 rowDescriptor;
 																		 })
@@ -546,7 +558,7 @@ typedef NS_ENUM(UInt8, ClimateState) {
 																		 ({
 																			 TableRowDescriptor *rowDescriptor = [TableRowDescriptor new];
 																			 rowDescriptor.cellReuseIdentifier = @"SliderCell";
-																			 rowDescriptor.modelObject = VENTING_NECESS_COEFF_CHARACTERISTIC_UUID;
+																			 rowDescriptor.modelObject = VENTING_NECESS_THRESHOLD_CHARACTERISTIC_UUID;
 																			 rowDescriptor.configureCellFromModelBlock = ^(UITableViewCell *cell, id modelObject) {
 																				 
 																				 UILabel *titleLabel = (UILabel *)[cell.contentView viewWithTag:CELL_TITLE_LABEL_TAG];
@@ -714,6 +726,84 @@ typedef NS_ENUM(UInt8, ClimateState) {
 		}
 	}
 	
+}
+
+#pragma mark - Calculations
+
+- (NSNumber *)maxAllowedHumidity {
+	
+	NSArray *necessaryKeys = @[EXTERIOR_HUMIDITY_CHARACTERISTIC_UUID,
+							   INTERIOR_TEMPERATURE_CHARACTERISTIC_UUID,
+							   EXTERIOR_TEMPERATURE_CHARACTERISTIC_UUID,
+							   HUMIDITY_NECESS_COEFF_CHARACTERISTIC_UUID,
+							   TEMP_NECESS_COEFF_CHARACTERISTIC_UUID,
+							   HUMIDITY_SETPOINT_CHARACTERISTIC_UUID,
+							   TEMPERATURE_SETPOINT_CHARACTERISTIC_UUID,
+							   VENTING_NECESS_THRESHOLD_CHARACTERISTIC_UUID];
+	
+	NSArray *testResults = [self.greenhouseValues objectsForKeys:necessaryKeys notFoundMarker:[NSNull null]];
+	if ([testResults containsObject:[NSNull null]]) {
+		
+		return nil;
+	
+	} else {
+	
+		//float interiorHumidity = ((NSNumber *)self.greenhouseValues[INTERIOR_HUMIDITY_CHARACTERISTIC_UUID]).doubleValue;
+		float exteriorHumidity = ((NSNumber *)self.greenhouseValues[EXTERIOR_HUMIDITY_CHARACTERISTIC_UUID]).doubleValue;
+		float interiorTemp = ((NSNumber *)self.greenhouseValues[INTERIOR_TEMPERATURE_CHARACTERISTIC_UUID]).doubleValue;
+		float exteriorTemp = ((NSNumber *)self.greenhouseValues[EXTERIOR_TEMPERATURE_CHARACTERISTIC_UUID]).doubleValue;
+		float humidityNecessity = ((NSNumber *)self.greenhouseValues[HUMIDITY_NECESS_COEFF_CHARACTERISTIC_UUID]).doubleValue;
+		float tempNecessity = ((NSNumber *)self.greenhouseValues[TEMP_NECESS_COEFF_CHARACTERISTIC_UUID]).doubleValue;
+		float humiditySetpoint = ((NSNumber *)self.greenhouseValues[HUMIDITY_SETPOINT_CHARACTERISTIC_UUID]).doubleValue;
+		float temperatureSetpoint = ((NSNumber *)self.greenhouseValues[TEMPERATURE_SETPOINT_CHARACTERISTIC_UUID]).doubleValue;
+		float necessityThreshold = ((NSNumber *)self.greenhouseValues[VENTING_NECESS_THRESHOLD_CHARACTERISTIC_UUID]).doubleValue;
+		
+		float A = 1.0;
+		float B = -1.0 * (humiditySetpoint + exteriorHumidity);
+		float C = (exteriorHumidity * humiditySetpoint) - ((necessityThreshold - tempNecessity * (interiorTemp - exteriorTemp)*(interiorTemp - temperatureSetpoint)) / humidityNecessity);
+		
+		float humidityLimit = (-1.0 * B + sqrtf(pow(B, 2) - 4 * A * C)) / (2 * A);
+		
+		return @(humidityLimit);
+	}
+}
+
+- (NSNumber *)maxAllowedTemperature {
+	
+	NSArray *necessaryKeys = @[INTERIOR_HUMIDITY_CHARACTERISTIC_UUID,
+							   EXTERIOR_HUMIDITY_CHARACTERISTIC_UUID,
+							   EXTERIOR_TEMPERATURE_CHARACTERISTIC_UUID,
+							   HUMIDITY_NECESS_COEFF_CHARACTERISTIC_UUID,
+							   TEMP_NECESS_COEFF_CHARACTERISTIC_UUID,
+							   HUMIDITY_SETPOINT_CHARACTERISTIC_UUID,
+							   TEMPERATURE_SETPOINT_CHARACTERISTIC_UUID,
+							   VENTING_NECESS_THRESHOLD_CHARACTERISTIC_UUID];
+	
+	NSArray *testResults = [self.greenhouseValues objectsForKeys:necessaryKeys notFoundMarker:[NSNull null]];
+	if ([testResults containsObject:[NSNull null]]) {
+		
+		return nil;
+		
+	} else {
+		
+		float interiorHumidity = ((NSNumber *)self.greenhouseValues[INTERIOR_HUMIDITY_CHARACTERISTIC_UUID]).doubleValue;
+		float exteriorHumidity = ((NSNumber *)self.greenhouseValues[EXTERIOR_HUMIDITY_CHARACTERISTIC_UUID]).doubleValue;
+		//float interiorTemp = ((NSNumber *)self.greenhouseValues[INTERIOR_TEMPERATURE_CHARACTERISTIC_UUID]).doubleValue;
+		float exteriorTemp = ((NSNumber *)self.greenhouseValues[EXTERIOR_TEMPERATURE_CHARACTERISTIC_UUID]).doubleValue;
+		float humidityNecessity = ((NSNumber *)self.greenhouseValues[HUMIDITY_NECESS_COEFF_CHARACTERISTIC_UUID]).doubleValue;
+		float tempNecessity = ((NSNumber *)self.greenhouseValues[TEMP_NECESS_COEFF_CHARACTERISTIC_UUID]).doubleValue;
+		float humiditySetpoint = ((NSNumber *)self.greenhouseValues[HUMIDITY_SETPOINT_CHARACTERISTIC_UUID]).doubleValue;
+		float temperatureSetpoint = ((NSNumber *)self.greenhouseValues[TEMPERATURE_SETPOINT_CHARACTERISTIC_UUID]).doubleValue;
+		float necessityThreshold = ((NSNumber *)self.greenhouseValues[VENTING_NECESS_THRESHOLD_CHARACTERISTIC_UUID]).doubleValue;
+		
+		float A = 1.0;
+		float B = -1.0 * (temperatureSetpoint + exteriorTemp);
+		float C = (exteriorTemp * temperatureSetpoint) - ((necessityThreshold - humidityNecessity * (interiorHumidity - exteriorHumidity)*(interiorHumidity - humiditySetpoint)) / tempNecessity);
+		
+		float temperatureLimit = (-1.0 * B + sqrtf(pow(B, 2) - 4 * A * C)) / (2 * A);
+		
+		return @(temperatureLimit);
+	}
 }
 
 #pragma mark -
