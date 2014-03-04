@@ -40,6 +40,10 @@ typedef struct {
 #define UNAVAILABLE_f -12345.678f  // Used for indicating a value has become unavailable
 #define UNAVAILABLE_u -1234  // Used for indicating a value has become unavailable
 
+#define SAMPLING_INTERVAL 4.0  // seconds (NOTE: Must match watchdog timer!)
+
+
+
 #define VENT_DOOR_OPEN 20  // servo angle
 #define VENT_DOOR_CLOSED 125  // servo angle
 

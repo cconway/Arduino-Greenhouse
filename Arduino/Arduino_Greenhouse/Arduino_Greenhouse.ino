@@ -23,6 +23,7 @@
 #include "lib_ble.h"
 #include "lib_hih6100.h"
 #include "lib_fsm.h"
+#include "lib_timeSeries.h"
 
 
 // USER-CONFIGURABLE VARIABLES
@@ -37,6 +38,12 @@ BLE BLE_board(handleACIEvent);
 
 // Finite State Machines
 FiniteStateMachine climateStateMachine(5, stateWillChange, stateDidChange);  // Receives # of states to support
+
+// TimeSeries storage
+TimeSeries humiditySeries;
+TimeSeries humidityChangeSeries;
+float maxHumidityChangeThisCycle;
+float peakHumidityChange;
 
 // Shift Register
 int shiftRegLatchPin = 4;
@@ -108,6 +115,7 @@ void loop() {
 
   //Process any ACI commands or events
   BLE_board.ble_loop();
+  
 }
 
 
@@ -115,7 +123,24 @@ void loop() {
 // ----------------------------------------------------
 void stateWillChange(uint8_t fromState, uint8_t toState) {
   
-  
+  switch (fromState) {  // WILL LEAVE...
+    
+    case ClimateStateSteady: {
+      
+      humiditySeries.clearAll();
+      humidityChangeSeries.clearAll();
+      
+      // Copy max last cycle to peak in case it didn't exceed previous peak
+      peakHumidityChange = maxHumidityChangeThisCycle;
+      maxHumidityChangeThisCycle = 0;
+      
+      Serial.print("Gaining ");
+      Serial.print(peakHumidityChange);
+      Serial.println(" % RH/min");
+ 
+      break;
+    }
+  }
 }
 
 void stateDidChange(uint8_t fromState, uint8_t toState) {
@@ -279,7 +304,8 @@ void performMeasurements() {
 }
 
 void analyzeSystemState() {
-
+  
+  // Calculate our Venting Necessity
   float humidityDeviation = interiorHoneywell.humidity - currentConfig.humiditySetpoint;  // + when interior is too humid
   float temperatureDeviation = interiorHoneywell.temperature - currentConfig.temperatureSetpoint; // + when interior is too warm
 
@@ -294,11 +320,43 @@ void analyzeSystemState() {
   BLE_board.setValueForCharacteristic(PIPE_GREENHOUSE_STATE_VENTING_NECESSITY_SET, ventingNecessity);
   BLE_board.notifyClientOfValueForCharacteristic(PIPE_GREENHOUSE_STATE_VENTING_NECESSITY_TX, ventingNecessity);
   
-  
+  // Determine if we need to change states
   switch ( climateStateMachine.getCurrentState() ) {
     
     case ClimateStateSteady: {
       
+      // Perform timeseries analysis
+      humiditySeries.addValue(interiorHoneywell.humidity);
+      
+      float slope = humiditySeries.averageSlope();
+      if (slope != UNAVAILABLE_f) {
+        
+        float percentPerMinute = slope * 60.0;  // Scale %-per-second to minutes
+        humidityChangeSeries.addValue(percentPerMinute);
+        
+        float rollingAverage = humidityChangeSeries.averageValue();
+        if (rollingAverage > maxHumidityChangeThisCycle) {
+          
+          maxHumidityChangeThisCycle = rollingAverage;
+        }
+        
+        if (rollingAverage > peakHumidityChange) {  // Update immediately if current rolling average > peak
+          
+          peakHumidityChange = rollingAverage;
+          
+          Serial.print("Gaining ");
+          Serial.print(peakHumidityChange);
+          Serial.println(" % RH/min");
+        }
+        
+//        Serial.print("Gaining ");
+//        Serial.print(rollingAverage);
+//        Serial.print(" % RH/min with ");
+//        Serial.print(humidityChangeSeries.measurementCount);
+//        Serial.println(" measurements");
+      }
+      
+      // 
       if (ventingNecessity >= currentConfig.ventingNecessityThreshold) {  // Trigger right at the threshold
         
         climateStateMachine.transitionToState(ClimateStateDecreasingHumidity);
