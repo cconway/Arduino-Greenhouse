@@ -7,7 +7,8 @@
 
 #include "lib_ble.h"
 
-#define ADVERTISING_INTERVAL 0x0020  // ms
+#define ADVERTISING_INTERVAL 510  // (multiple of 0.625ms)
+#define ADVERTISING_TIMEOUT 30 // sec (0 means never)
 
 // ----------------------------------------------------
 // lib_aci Interaction
@@ -169,10 +170,15 @@ void aci_loop()
               if (aci_evt->params.device_started.hw_error)
               {
                 delay(20); //Handle the HW error event correctly.
+                Serial.print(F("ACI hardware error, code: "));
+                Serial.println(aci_evt->params.device_started.hw_error);
+                
+                // Added.  Try to start advertising anyways
+                lib_aci_connect(ADVERTISING_TIMEOUT/* in seconds : 0 means forever */, ADVERTISING_INTERVAL /* advertising interval 50ms*/);
               }
               else
               {
-              lib_aci_connect(0/* in seconds : 0 means forever */, ADVERTISING_INTERVAL /* advertising interval 50ms*/);
+                lib_aci_connect(ADVERTISING_TIMEOUT/* in seconds : 0 means forever */, ADVERTISING_INTERVAL /* advertising interval 50ms*/);
 //              Serial.println(F("Advertising started : Tap Connect on the nRF UART app"));
               }
               
@@ -242,7 +248,7 @@ void aci_loop()
         
       case ACI_EVT_DISCONNECTED:
         Serial.println(F("Evt Disconnected/Advertising timed out"));
-        lib_aci_connect(0/* in seconds  : 0 means forever */, ADVERTISING_INTERVAL /* advertising interval 50ms*/);
+        lib_aci_connect(ADVERTISING_TIMEOUT/* in seconds  : 0 means forever */, ADVERTISING_INTERVAL /* advertising interval 50ms*/);
 //        Serial.println(F("Advertising started"));        
         break;
         
@@ -315,7 +321,7 @@ void aci_loop()
         Serial.write(aci_evt->params.hw_error.file_name[counter]); //uint8_t file_name[20];
         }
         Serial.println();
-        lib_aci_connect(0/* in seconds, 0 means forever */, ADVERTISING_INTERVAL /* advertising interval 50ms*/);
+        lib_aci_connect(ADVERTISING_TIMEOUT/* in seconds, 0 means forever */, ADVERTISING_INTERVAL /* advertising interval 50ms*/);
 //        Serial.println(F("Advertising started. Tap Connect on the nRF UART app"));
         break;
            
@@ -334,10 +340,10 @@ void aci_loop()
   }
 }
 
-void setACIPostEventHandler(ACIPostEventHandler handlerFn) {
-  
-  postEventHandlerFn = handlerFn;
-}
+//void setACIPostEventHandler(ACIPostEventHandler handlerFn) {
+//  
+//  postEventHandlerFn = handlerFn;
+//}
 
 
 
@@ -348,6 +354,8 @@ void setACIPostEventHandler(ACIPostEventHandler handlerFn) {
 
 BLE::BLE(ACIPostEventHandler handlerFn) {
   
+  postEventHandlerFn = handlerFn;
+  
   _aci_cmd_pending = 0;
  _data_credit_pending = 0;
 }
@@ -356,12 +364,18 @@ void BLE::waitForACIResponse() {
   
   _aci_cmd_pending = true;
   while (_aci_cmd_pending) aci_loop();
+  
+  // Reset hung-loop detection
+  loopingSinceLastBark = false;
 }
 
 void BLE::waitForDataCredit() {
   
   _data_credit_pending = true;
   while (_data_credit_pending) aci_loop();
+  
+  // Reset hung-loop detection
+  loopingSinceLastBark = false;
 }
 
 boolean BLE::writeBufferToPipe(uint8_t *buffer, uint8_t byteCount, uint8_t pipe) {

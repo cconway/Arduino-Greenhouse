@@ -12,6 +12,7 @@
 #import "CBPeripheral+Additions.h"
 
 #define SCAN_DURATION_SECONDS 3
+#define RSSI_INTERVAL_SECONDS 4
 
 typedef NS_ENUM(UInt8, ClimateState) {
 	
@@ -36,7 +37,11 @@ typedef NS_ENUM(UInt8, ClimateState) {
 	BOOL _isScanning;
 	BOOL _isInteractionSetup;
 	BOOL _previousPeripheralAttempt;
+	
+	NSTimer *_rssiTimer;
 }
+
+@property (strong, nonatomic) NSMutableArray *peripheralsToTry;
 
 @property (strong, nonatomic) CBPeripheral *blePeripheral;
 
@@ -235,6 +240,22 @@ typedef NS_ENUM(UInt8, ClimateState) {
 																				 limitLabel.text = [NSString stringWithFormat:@"(%@ max)", [_temperatureFormatter stringForObjectValue:fahrenheitMaxValue]];
 																			 };
 																			 rowDescriptor;
+																		 }),
+																		 ({
+																			 TableRowDescriptor *rowDescriptor = [TableRowDescriptor new];
+																			 rowDescriptor.cellReuseIdentifier = @"LabelCell";
+																			 rowDescriptor.modelObject = PEAK_HUMIDITY_RISE_CHARACTERISTIC_UUID;
+																			 rowDescriptor.configureCellFromModelBlock = ^(UITableViewCell *cell, id modelObject) {
+																				 
+																				 UILabel *titleLabel = (UILabel *)[cell.contentView viewWithTag:CELL_TITLE_LABEL_TAG];
+																				 UILabel *valueLabel = (UILabel *)[cell.contentView viewWithTag:CELL_VALUE_LABEL_TAG];
+																				 NSNumber *value = self.greenhouseValues[modelObject];
+																				 
+																				 // Configure Cell
+																				 titleLabel.text = NSLocalizedString(@"Peak Humidity Rise", @"Cell title label");
+																				 valueLabel.text = [NSString stringWithFormat:@"%@ / min", [_humidityFormatter stringForObjectValue:value]];
+																			 };
+																			 rowDescriptor;
 																		 })
 																		 ];
 									sectionDescriptor;
@@ -261,11 +282,11 @@ typedef NS_ENUM(UInt8, ClimateState) {
 																				 aSwitch.on = (value.integerValue == VENT_FLAP_OPEN);
 																				 
 																			 };
-																			 //																			 rowDescriptor.updateModelFromCellBlock = ^(UITableViewCell *cell, id modelObject) {
-																			 //
-																			 //																				 UISwitch *aSwitch = (UISwitch *)[cell.contentView viewWithTag:CELL_SWITCH_TAG];
-																			 //																				 [modelObject setValue:@((aSwitch.on) ? VENT_FLAP_OPEN : VENT_FLAP_CLOSED) forKey:VENT_FLAP_CHARACTERISTIC_UUID];
-																			 //																			 };
+//																			 rowDescriptor.updateModelFromCellBlock = ^(UITableViewCell *cell, id modelObject) {
+//
+//																				 UISwitch *aSwitch = (UISwitch *)[cell.contentView viewWithTag:CELL_SWITCH_TAG];
+//																				 [modelObject setValue:@((aSwitch.on) ? VENT_FLAP_OPEN : VENT_FLAP_CLOSED) forKey:VENT_FLAP_CHARACTERISTIC_UUID];
+//																			 };
 																			 rowDescriptor;
 																		 }),
 																		 ({
@@ -280,42 +301,39 @@ typedef NS_ENUM(UInt8, ClimateState) {
 																				 NSNumber *value = self.greenhouseValues[modelObject];
 																				 
 																				 // Configure Cell
-																				 titleLabel.text = NSLocalizedString(@"Light Bank 1", @"Cell title label");
+																				 titleLabel.text = NSLocalizedString(@"Lighting", @"Cell title label");
 																				 valueLabel.text = [NSString stringWithFormat:@"%d", (int) value.integerValue];
 																				 aSwitch.on = (value.integerValue == LIGHTBANK_ON);
 																				 aSwitch.userInteractionEnabled = NO;
 																				 
 																			 };
-																			 //																			 rowDescriptor.updateModelFromCellBlock = ^(UITableViewCell *cell, id modelObject) {
-																			 //
-																			 //																				 UISwitch *aSwitch = (UISwitch *)[cell.contentView viewWithTag:CELL_SWITCH_TAG];
-																			 //																				 [modelObject setValue:@((aSwitch.on) ? VENT_FLAP_OPEN : VENT_FLAP_CLOSED) forKey:LIGHTBANK_1_CHARACTERISTIC_UUID];
-																			 //																			 };
+//																			 rowDescriptor.updateModelFromCellBlock = ^(UITableViewCell *cell, id modelObject) {
+//
+//																				 UISwitch *aSwitch = (UISwitch *)[cell.contentView viewWithTag:CELL_SWITCH_TAG];
+//																				 [modelObject setValue:@((aSwitch.on) ? VENT_FLAP_OPEN : VENT_FLAP_CLOSED) forKey:LIGHTBANK_1_CHARACTERISTIC_UUID];
+//																			 };
 																			 rowDescriptor;
 																		 }),
 																		 ({
 																			 TableRowDescriptor *rowDescriptor = [TableRowDescriptor new];
-																			 rowDescriptor.cellReuseIdentifier = @"SwitchCell";
-																			 rowDescriptor.modelObject = LIGHTBANK_2_CHARACTERISTIC_UUID;
+																			 rowDescriptor.cellReuseIdentifier = @"LabelCell";
+																			 rowDescriptor.modelObject = RSSI_KEY;
 																			 rowDescriptor.configureCellFromModelBlock = ^(UITableViewCell *cell, id modelObject) {
 																				 
 																				 UILabel *titleLabel = (UILabel *)[cell.contentView viewWithTag:CELL_TITLE_LABEL_TAG];
 																				 UILabel *valueLabel = (UILabel *)[cell.contentView viewWithTag:CELL_VALUE_LABEL_TAG];
-																				 UISwitch *aSwitch = (UISwitch *)[cell.contentView viewWithTag:CELL_SWITCH_TAG];
-																				 NSNumber *value = self.greenhouseValues[modelObject];
+																				 CBPeripheral *aPeripheral = [self valueForKey:@"blePeripheral"];
 																				 
 																				 // Configure Cell
-																				 titleLabel.text = NSLocalizedString(@"Light Bank 2", @"Cell title label");
-																				 valueLabel.text = [NSString stringWithFormat:@"%d", (int) value.integerValue];
-																				 aSwitch.on = (value.integerValue == LIGHTBANK_ON);
-																				 aSwitch.userInteractionEnabled = NO;
+																				 titleLabel.text = NSLocalizedString(@"Signal Strength (RSSI)", @"Cell title label");
+																				 valueLabel.text = [NSString stringWithFormat:@"%@", [_floatFormatter stringFromNumber:aPeripheral.RSSI]];
 																				 
 																			 };
-																			 //																			 rowDescriptor.updateModelFromCellBlock = ^(UITableViewCell *cell, id modelObject) {
-																			 //
-																			 //																				 UISwitch *aSwitch = (UISwitch *)[cell.contentView viewWithTag:CELL_SWITCH_TAG];
-																			 //																				 [modelObject setValue:@((aSwitch.on) ? VENT_FLAP_OPEN : VENT_FLAP_CLOSED) forKey:LIGHTBANK_1_CHARACTERISTIC_UUID];
-																			 //																			 };
+//																			 rowDescriptor.updateModelFromCellBlock = ^(UITableViewCell *cell, id modelObject) {
+//
+//																				 UISwitch *aSwitch = (UISwitch *)[cell.contentView viewWithTag:CELL_SWITCH_TAG];
+//																				 [modelObject setValue:@((aSwitch.on) ? VENT_FLAP_OPEN : VENT_FLAP_CLOSED) forKey:LIGHTBANK_1_CHARACTERISTIC_UUID];
+//																			 };
 																			 rowDescriptor;
 																		 })
 																		 ];
@@ -466,7 +484,7 @@ typedef NS_ENUM(UInt8, ClimateState) {
 																					 
 																					 [slider setValue:0 animated:NO];
 																					 
-																					 valueLabel.text = NSLocalizedString(@"Always On", @"Illumination on-time disabled label");
+																					 valueLabel.text = NSLocalizedString(@"Always On", @"Illumination off-time disabled label");
 																					 
 																				 } else {
 																					 
@@ -868,18 +886,29 @@ typedef NS_ENUM(UInt8, ClimateState) {
 		CBUUID *peripheralUUID = [CBUUID UUIDWithString:UUIDString];
 		NSArray *peripherals = [self.bleCentral retrievePeripheralsWithIdentifiers:@[peripheralUUID]];
 		
-		if (peripherals.count > 0) {  // iOS has a record for our device cached
-			
-			NSLog(@"Attempting to reconnect to a remembered peripheral");
-			
-			_previousPeripheralAttempt = YES;
-			[self connectToPeripheral:peripherals.firstObject];
-		}
+		self.peripheralsToTry = [NSMutableArray arrayWithArray:peripherals];
+	}
+	
+	[self tryNextPeripheral];
+}
+
+- (void)tryNextPeripheral {
+	
+	if (self.peripheralsToTry.count > 0) {  // iOS has a record for our device cached
 		
-	} else {  // No memory of previously connected devices
+		NSLog(@"Attempting to reconnect to a remembered peripheral");
+		
+		CBPeripheral *aPeripheral = self.peripheralsToTry.lastObject;
+		[self.peripheralsToTry removeObject:aPeripheral];
+		
+		_previousPeripheralAttempt = YES;
+		[self connectToPeripheral:aPeripheral];
+	
+	} else {
 		
 		[self scanForDevices];
 	}
+
 }
 
 - (void)scanForDevices {
@@ -887,8 +916,6 @@ typedef NS_ENUM(UInt8, ClimateState) {
 	if (_isScanning == NO) {  // Don't continue if we're already scanning
 		
 		NSLog(@"Scanning for available peripherals...");
-		
-		_previousPeripheralAttempt = NO;
 		
 		//		[self.activityIndicator startAnimating];
 		self.connectButton.selected = YES;
@@ -926,12 +953,59 @@ typedef NS_ENUM(UInt8, ClimateState) {
 
 - (void)connectToPeripheral:(CBPeripheral *)peripheral {
 	
-	[self.connectButton setTitle:@"Connecting..." forState:UIControlStateSelected];
-	
 	peripheral.delegate = self;
 	self.blePeripheral = peripheral;
 	
-	[self.bleCentral connectPeripheral:self.blePeripheral options:nil];
+	if (peripheral.state == CBPeripheralStateDisconnected) {
+	
+		[self.connectButton setTitle:@"Connecting..." forState:UIControlStateSelected];
+		[self.bleCentral connectPeripheral:self.blePeripheral options:nil];
+		
+	} else if (peripheral.state == CBPeripheralStateConnected) {
+		
+		// Already connected, so let's bootstrap in case it hasn't already been done
+		[self bootstrapConnectionToPeripheral:peripheral];
+	}
+}
+
+- (void)bootstrapConnectionToPeripheral:(CBPeripheral *)peripheral {
+	
+	self.connectButton.selected = NO;
+	
+	[self.connectButton setTitle:@"Disconnect" forState:UIControlStateNormal];
+	[self.connectButton setTitle:@"Disconnecting..." forState:UIControlStateSelected];
+	
+	if (_previousPeripheralAttempt) NSLog(@"Re-connected to previous peripheral");
+	else NSLog(@"Connected to peripheral found during scan");
+	
+	// Store the peripherials 'identifier' UUID so we can try to reconnect later
+	[[NSUserDefaults standardUserDefaults] setValue:peripheral.identifier.UUIDString forKey:PreviouslyConnectedPeripheralUUID];
+	[[NSUserDefaults standardUserDefaults] synchronize];
+	
+	
+	[peripheral discoverServices:nil];  // Discover all services
+	
+	CBCharacteristic *dateTimeCharacteristic = [self bleCharacteristicWithString:DATE_TIME_CHARACTERISTIC_UUID];
+	if (dateTimeCharacteristic) {
+		
+		// Update the device's clock
+		UInt32 unixTime = [[NSDate date] timeIntervalSince1970];
+		NSData *buffer = [NSData dataWithBytes:&unixTime length:sizeof(UInt32)];
+		
+		[self.blePeripheral writeValue:buffer forCharacteristic:dateTimeCharacteristic type:CBCharacteristicWriteWithResponse];
+		
+	}
+	
+	_rssiTimer = [NSTimer scheduledTimerWithTimeInterval:RSSI_INTERVAL_SECONDS target:self selector:@selector(rssiTimerDidFire) userInfo:nil repeats:YES];
+	_rssiTimer.tolerance = 0.1 * RSSI_INTERVAL_SECONDS;  // Recommended 10% tolerance
+}
+				  
+- (void)rssiTimerDidFire {
+	
+	if (self.blePeripheral.state == CBPeripheralStateConnected) {
+		
+		[self.blePeripheral readRSSI];
+	}
 }
 
 - (void)discoverCharacteristicsForService:(CBUUID *)serviceUUID {
@@ -987,6 +1061,11 @@ typedef NS_ENUM(UInt8, ClimateState) {
 		if ((aCharacteristic.properties & CBCharacteristicPropertyRead) == CBCharacteristicPropertyRead) {  // Check that Characteristic supports 'Notify'
 			
 			[self.blePeripheral readValueForCharacteristic:aCharacteristic];
+			
+		}
+		
+		if ([aCharacteristic.UUID.UUIDString isEqualToString:@"E8CC0109-55E3-0B64-40F8-B2F289661BDA"]) {
+			
 			
 		}
 		
@@ -1051,36 +1130,13 @@ typedef NS_ENUM(UInt8, ClimateState) {
 	
 	[self stopScanningForDevices];
 	
+	_previousPeripheralAttempt = NO;
 	[self connectToPeripheral:peripheral];
 }
 
 - (void)centralManager:(CBCentralManager *)central didConnectPeripheral:(CBPeripheral *)peripheral {
 	
-	self.connectButton.selected = NO;
-	
-	[self.connectButton setTitle:@"Disconnect" forState:UIControlStateNormal];
-	[self.connectButton setTitle:@"Disconnecting..." forState:UIControlStateSelected];
-	
-	if (_previousPeripheralAttempt) NSLog(@"Re-connected to previous peripheral");
-	else NSLog(@"Connected to peripheral found during scan");
-	
-	// Store the peripherials 'identifier' UUID so we can try to reconnect later
-	[[NSUserDefaults standardUserDefaults] setValue:peripheral.identifier.UUIDString forKey:PreviouslyConnectedPeripheralUUID];
-	[[NSUserDefaults standardUserDefaults] synchronize];
-	
-	
-	[peripheral discoverServices:nil];  // Discover all services
-	
-	CBCharacteristic *dateTimeCharacteristic = [self bleCharacteristicWithString:DATE_TIME_CHARACTERISTIC_UUID];
-	if (dateTimeCharacteristic) {
-		
-		// Update the device's clock
-		UInt32 unixTime = [[NSDate date] timeIntervalSince1970];
-		NSData *buffer = [NSData dataWithBytes:&unixTime length:sizeof(UInt32)];
-		
-		[self.blePeripheral writeValue:buffer forCharacteristic:dateTimeCharacteristic type:CBCharacteristicWriteWithResponse];
-		
-	}
+	[self bootstrapConnectionToPeripheral:peripheral];
 }
 
 - (void)centralManager:(CBCentralManager *)central didDisconnectPeripheral:(CBPeripheral *)peripheral error:(NSError *)error {
@@ -1089,6 +1145,17 @@ typedef NS_ENUM(UInt8, ClimateState) {
 	
 	[self.connectButton setTitle:@"Connect" forState:UIControlStateNormal];
 	[self.connectButton setTitle:@"Scanning..." forState:UIControlStateSelected];
+	
+	[_rssiTimer invalidate];
+	
+	self.blePeripheral = nil;
+	
+	if (error) {
+		
+		NSLog(@"Disconnect Error: %@ from peripheral with RSSI = %1.2f", [error description], [peripheral.RSSI floatValue]);
+		
+		[self tryNextPeripheral];
+	}
 }
 
 - (void)centralManager:(CBCentralManager *)central didFailToConnectPeripheral:(CBPeripheral *)peripheral error:(NSError *)error {
@@ -1098,12 +1165,18 @@ typedef NS_ENUM(UInt8, ClimateState) {
 	[self.connectButton setTitle:@"Connect" forState:UIControlStateNormal];
 	[self.connectButton setTitle:@"Scanning..." forState:UIControlStateSelected];
 	
-	if (_previousPeripheralAttempt == YES) {  // Attempt to connect to a remembered peripheral failed
-		
-		NSLog(@"Attempt to connect to previously used peripheral failed, falling back to scanning...");
-		
-		[self scanForDevices];
-	}
+	self.blePeripheral = nil;
+	
+	NSLog(@"Connection Failed Error: %@ from peripheral with RSSI = %1.2f", [error description], [peripheral.RSSI floatValue]);
+	
+	[self tryNextPeripheral];
+	
+//	if (_previousPeripheralAttempt == YES) {  // Attempt to connect to a remembered peripheral failed
+//		
+//		NSLog(@"Attempt to connect to previously used peripheral failed, falling back to scanning...");
+//		
+//		[self scanForDevices];
+//	}
 }
 
 
@@ -1165,7 +1238,7 @@ typedef NS_ENUM(UInt8, ClimateState) {
 			break;
 		}
 			
-		default: NSLog(@"Encountered Characteristic with value that is neither float or UInt8");
+		default: NSLog(@"Encountered Characteristic with value that is neither float, UInt8, nor SInt16");
 	}
 	
 	// Update the relevant TableView rows
@@ -1189,6 +1262,26 @@ typedef NS_ENUM(UInt8, ClimateState) {
 	 [[UIApplication sharedApplication] presentLocalNotificationNow:localNotification];
 	 }
 	 */
+}
+
+- (void)peripheralDidUpdateRSSI:(CBPeripheral *)peripheral error:(NSError *)error {
+	
+	if (error) {
+		
+		NSLog(@"Read RSSI Error: %@", [error description]);
+	
+	} else {
+		
+		NSArray *rowDescriptors = [self rowDescriptorsWithModelObject:RSSI_KEY];
+		NSMutableArray *indexPaths = [NSMutableArray new];
+		for (TableRowDescriptor *aRowDescriptor in rowDescriptors) {
+			
+			NSIndexPath *indexPathToReload = [self indexPathOfCellForRowDescriptor:aRowDescriptor];
+			[indexPaths addObject:indexPathToReload];
+		}
+		
+		[self.tableView reloadRowsAtIndexPaths:indexPaths withRowAnimation:UITableViewRowAnimationNone];
+	}
 }
 
 - (void)peripheral:(CBPeripheral *)peripheral didWriteValueForCharacteristic:(CBCharacteristic *)characteristic error:(NSError *)error {

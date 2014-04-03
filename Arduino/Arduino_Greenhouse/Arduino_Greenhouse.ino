@@ -42,8 +42,8 @@ FiniteStateMachine climateStateMachine(5, stateWillChange, stateDidChange);  // 
 // TimeSeries storage
 TimeSeries humiditySeries;
 TimeSeries humidityChangeSeries;
-float maxHumidityChangeThisCycle;
-float peakHumidityChange;
+float maxHumidityChangeThisCycle = UNAVAILABLE_f;
+float peakHumidityChange = UNAVAILABLE_f;
 
 // Shift Register
 int shiftRegLatchPin = 4;
@@ -63,14 +63,13 @@ int lightBank1DutyCycle = HIGH;
 int lightBank2DutyCycle = HIGH;
 
 // W.D. interrupt handler should be as short as possible, so it sets
-//   watchdogWokeUp = 1 to indicate to run-loop that watchdog timer fired
-volatile int watchdogWokeUp = 0;
-
+//   watchdogWokeUp = true to indicate to run-loop that watchdog timer fired
+volatile boolean watchdogWokeUp = false;
 
 void setup (void) {
 
-  Serial.begin(57600);
-  while(!Serial) {}  //  Wait until the serial port is available (useful only for the leonardo)
+//  Serial.begin(57600);
+//  while(!Serial) {}  //  Wait until the serial port is available (useful only for the leonardo)
   Serial.println(F("Serial logging enabled"));
   
   restoreConfiguration();
@@ -80,7 +79,7 @@ void setup (void) {
 //  wdt_enable(WDTO_4S);
 
 // Configure Bluetooth LE support
-  setACIPostEventHandler(handleACIEvent);
+//  setACIPostEventHandler(handleACIEvent);
   BLE_board.ble_setup();
   
   // Configure State Machine
@@ -104,7 +103,7 @@ void loop() {
    
 //    Serial.println(F("Watchdog barked!"));
     
-    watchdogWokeUp = 0;  // Reset flag until watchdog fires again
+    watchdogWokeUp = false;  // Reset flag until watchdog fires again
     
     performMeasurements();
     
@@ -118,6 +117,24 @@ void loop() {
   
 }
 
+
+// STUCK-IN-LOOP DETECTIOn
+// ----------------------------------------------------
+void detectHungLoop() {
+  
+  if (BLE_board.loopingSinceLastBark) {
+    
+    // Assume we're in an inf-loop, force us out to try and recover
+    BLE_board._aci_cmd_pending = false;
+    BLE_board._data_credit_pending  = false;
+    
+  } else if (BLE_board._aci_cmd_pending || BLE_board._data_credit_pending) {
+    
+    // Set a marker so we can see if either loop has exited by the next time the watchdog barks
+    BLE_board.loopingSinceLastBark = true;
+  
+  }  // else do nothing, everything's peachy
+}
 
 // CLIMATE STATE MACHINE CALLBACKS
 // ----------------------------------------------------
@@ -134,9 +151,12 @@ void stateWillChange(uint8_t fromState, uint8_t toState) {
       peakHumidityChange = maxHumidityChangeThisCycle;
       maxHumidityChangeThisCycle = 0;
       
-      Serial.print("Gaining ");
-      Serial.print(peakHumidityChange);
-      Serial.println(" % RH/min");
+      BLE_board.setValueForCharacteristic(PIPE_GREENHOUSE_MEASUREMENTS_PEAK_HUMIDITY_RISE_SET, peakHumidityChange);
+      BLE_board.notifyClientOfValueForCharacteristic(PIPE_GREENHOUSE_MEASUREMENTS_PEAK_HUMIDITY_RISE_TX, peakHumidityChange);
+      
+//      Serial.print("Gaining ");
+//      Serial.print(peakHumidityChange);
+//      Serial.println(" % RH/min");
  
       break;
     }
@@ -242,11 +262,11 @@ void updateBluetoothReadPipes() {
 //  BLE_board.setValueForCharacteristic(PIPE_GREENHOUSE_STATE_VENTING_NECESSITY_SET, 0);
   BLE_board.setValueForCharacteristic(PIPE_GREENHOUSE_STATE_VENTING_NECESSITY_TARGET_SET, currentConfig.targetVentingNecessity);
   BLE_board.setValueForCharacteristic(PIPE_GREENHOUSE_STATE_CLIMATE_CONTROL_STATE_SET, (uint8_t) climateStateMachine.getCurrentState());
-  BLE_board.setValueForCharacteristic(PIPE_GREENHOUSE_STATE_SHIFT_REGISTER_STATE_SET, shiftRegisterState);
+//  BLE_board.setValueForCharacteristic(PIPE_GREENHOUSE_STATE_SHIFT_REGISTER_STATE_SET, shiftRegisterState);
   
   // Controls
   BLE_board.setValueForCharacteristic(PIPE_GREENHOUSE_CONTROLS_LIGHT_BANK_1_DUTY_CYCLE_SET, (uint8_t) lightBank1DutyCycle);
-  BLE_board.setValueForCharacteristic(PIPE_GREENHOUSE_CONTROLS_LIGHT_BANK_2_DUTY_CYCLE_SET, (uint8_t) lightBank2DutyCycle);
+//  BLE_board.setValueForCharacteristic(PIPE_GREENHOUSE_CONTROLS_LIGHT_BANK_2_DUTY_CYCLE_SET, (uint8_t) lightBank2DutyCycle);
   BLE_board.setValueForCharacteristic(PIPE_GREENHOUSE_CONTROLS_VENT_SERVO_POSITION_SET, (uint8_t) ventDoorServo.read());
   
   // Measurements
@@ -254,6 +274,7 @@ void updateBluetoothReadPipes() {
 //  BLE_board.setValueForCharacteristic(PIPE_GREENHOUSE_MEASUREMENTS_EXTERIOR_TEMPERATURE_SET, shiftRegisterState);
 //  BLE_board.setValueForCharacteristic(PIPE_GREENHOUSE_MEASUREMENTS_INTERIOR_HUMIDITY_SET, shiftRegisterState);
 //  BLE_board.setValueForCharacteristic(PIPE_GREENHOUSE_MEASUREMENTS_INTERIOR_TEMPERATURE_SET, shiftRegisterState);
+  BLE_board.setValueForCharacteristic(PIPE_GREENHOUSE_MEASUREMENTS_PEAK_HUMIDITY_RISE_SET, peakHumidityChange);
 }
 
 void setupClimateStateMachine() {
@@ -344,9 +365,12 @@ void analyzeSystemState() {
           
           peakHumidityChange = rollingAverage;
           
-          Serial.print("Gaining ");
-          Serial.print(peakHumidityChange);
-          Serial.println(" % RH/min");
+          BLE_board.setValueForCharacteristic(PIPE_GREENHOUSE_MEASUREMENTS_PEAK_HUMIDITY_RISE_SET, peakHumidityChange);
+          BLE_board.notifyClientOfValueForCharacteristic(PIPE_GREENHOUSE_MEASUREMENTS_PEAK_HUMIDITY_RISE_TX, peakHumidityChange);
+          
+//          Serial.print("Gaining ");
+//          Serial.print(peakHumidityChange);
+//          Serial.println(" % RH/min");
         }
         
 //        Serial.print("Gaining ");
@@ -432,8 +456,8 @@ void checkIlluminationTimer() {
   BLE_board.setValueForCharacteristic(PIPE_GREENHOUSE_CONTROLS_LIGHT_BANK_1_DUTY_CYCLE_SET, (uint8_t) lightBank1DutyCycle);
   BLE_board.notifyClientOfValueForCharacteristic(PIPE_GREENHOUSE_CONTROLS_LIGHT_BANK_1_DUTY_CYCLE_TX, (uint8_t) lightBank1DutyCycle);
   
-  BLE_board.setValueForCharacteristic(PIPE_GREENHOUSE_CONTROLS_LIGHT_BANK_2_DUTY_CYCLE_SET, (uint8_t) lightBank2DutyCycle);
-  BLE_board.notifyClientOfValueForCharacteristic(PIPE_GREENHOUSE_CONTROLS_LIGHT_BANK_2_DUTY_CYCLE_TX, (uint8_t) lightBank2DutyCycle);
+//  BLE_board.setValueForCharacteristic(PIPE_GREENHOUSE_CONTROLS_LIGHT_BANK_2_DUTY_CYCLE_SET, (uint8_t) lightBank2DutyCycle);
+//  BLE_board.notifyClientOfValueForCharacteristic(PIPE_GREENHOUSE_CONTROLS_LIGHT_BANK_2_DUTY_CYCLE_TX, (uint8_t) lightBank2DutyCycle);
 }
 
 
@@ -634,6 +658,7 @@ boolean receivedDataFromPipe(uint8_t *bytes, uint8_t byteCount, uint8_t pipe) {
       
         unsigned long bleHostTime = *((unsigned long *)bytes);
         setTime(bleHostTime);
+        adjustTime(3600);  // Shift time forward 1hr (not sure why necessary to be correct)
         
       }
       
@@ -694,8 +719,8 @@ void enableHoneywellSensor(HoneywellSensor sensorID) {
    
    shiftRegisterState = enabledOutputs;
    
-   BLE_board.setValueForCharacteristic(PIPE_GREENHOUSE_STATE_SHIFT_REGISTER_STATE_SET, shiftRegisterState);
-   BLE_board.notifyClientOfValueForCharacteristic(PIPE_GREENHOUSE_STATE_SHIFT_REGISTER_STATE_TX, shiftRegisterState);
+//   BLE_board.setValueForCharacteristic(PIPE_GREENHOUSE_STATE_SHIFT_REGISTER_STATE_SET, shiftRegisterState);
+//   BLE_board.notifyClientOfValueForCharacteristic(PIPE_GREENHOUSE_STATE_SHIFT_REGISTER_STATE_TX, shiftRegisterState);
 }
 
 
@@ -778,6 +803,6 @@ void startWatchdogTimer() {
 // Register function for Watchdog interrupt
 ISR(WDT_vect) {
     
-    watchdogWokeUp = 1;
+    watchdogWokeUp = true;
     wdt_reset();  // Pet the Watchdog, stop it from forcing hardware reset
 }

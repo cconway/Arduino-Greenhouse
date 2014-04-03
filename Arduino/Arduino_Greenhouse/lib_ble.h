@@ -35,14 +35,15 @@ class BLE {
  
     byte _aci_cmd_pending;
     byte _data_credit_pending;
-    boolean timing_change_done;  
+    boolean timing_change_done;
+    volatile boolean loopingSinceLastBark;
     
   private:
     
     void processACIEvent(aci_state_t *aci_state, aci_evt_t *aci_evt);
     void waitForACIResponse();
     void waitForDataCredit();
-    boolean writeBufferToPipe(uint8_t *buffer, uint8_t byteCount, uint8_t pipe);  
+    boolean writeBufferToPipe(uint8_t *buffer, uint8_t byteCount, uint8_t pipe);
 };
 
 void setACIPostEventHandler(ACIPostEventHandler handlerFn);
