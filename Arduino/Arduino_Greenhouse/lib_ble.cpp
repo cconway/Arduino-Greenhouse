@@ -20,6 +20,19 @@
 #include <lib_aci.h>
 #include <aci_setup.h>
 
+
+/* Define how assert should function in the BLE library */
+void __ble_assert(const char *file, uint16_t line)
+{
+  Serial.print("ERROR ");
+  Serial.print(file);
+  Serial.print(": ");
+  Serial.print(line);
+  Serial.print("\n");
+  while(1);
+}
+
+
 /**
 Put the nRF8001 setup in the RAM of the nRF8001.
 */
@@ -127,21 +140,23 @@ void aci_setup(void)
 	//If the RESET line is not available we call the ACI Radio Reset to soft reset the nRF8001
 	//then we initialize the data structures required to setup the nRF8001
 
-        delay(50);
-        lib_aci_radio_reset();
-        delay(50); 
+//        delay(50);
+//        lib_aci_radio_reset();
+//        delay(50); 
         
-        lib_aci_init(&aci_state);
+        lib_aci_init(&aci_state, false);
 }
 
 void aci_loop()
 {
+  static bool setup_required = false;
+  
   // We enter the if statement only when there is a ACI event available to be processed
   if (lib_aci_event_get(&aci_state, &aci_data))
   {
     aci_evt_t * aci_evt;
+    aci_evt = &aci_data.evt;  
     
-    aci_evt = &aci_data.evt;    
     switch(aci_evt->evt_opcode)
     {
         /**
@@ -153,15 +168,12 @@ void aci_loop()
           switch(aci_evt->params.device_started.device_mode)
           {
             case ACI_DEVICE_SETUP:
-            /**
-            When the device is in the setup mode
-            */
-//            Serial.println(F("Evt Device Started: Setup"));
-            if (ACI_STATUS_TRANSACTION_COMPLETE != do_aci_setup(&aci_state))
-            {
-              Serial.println(F("Error in ACI Setup"));
-            }
-            break;
+              /**
+              When the device is in the setup mode
+              */
+              Serial.println(F("Evt Device Started: Setup"));
+              setup_required = true;
+              break;
             
             case ACI_DEVICE_STANDBY:
 //              Serial.println(F("Evt Device Started: Standby"));
@@ -337,6 +349,19 @@ void aci_loop()
     // No event in the ACI Event queue and if there is no event in the ACI command queue the arduino can go to sleep
     // Arduino can go to sleep now
     // Wakeup from sleep from the RDYN line
+  }
+  
+  
+  /* setup_required is set to true when the device starts up and enters setup mode.
+   * It indicates that do_aci_setup() should be called. The flag should be cleared if
+   * do_aci_setup() returns ACI_STATUS_TRANSACTION_COMPLETE.
+   */
+  if(setup_required)
+  {
+    if (SETUP_SUCCESS == do_aci_setup(&aci_state))
+    {
+      setup_required = false;
+    }
   }
 }
 
