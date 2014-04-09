@@ -102,59 +102,20 @@ typedef NS_ENUM(UInt8, ClimateState) {
 		sectionDescriptor.rowDescriptors = @[
 											 ({
 												 TableRowDescriptor *rowDescriptor = [TableRowDescriptor new];
-												 rowDescriptor.cellReuseIdentifier = @"DualLabelCell";
+												 rowDescriptor.cellReuseIdentifier = @"LabelCell";
 												 rowDescriptor.modelObject = VENTING_NECESSITY_CHARACTERISTIC_UUID;
 												 rowDescriptor.configureCellFromModelBlock = ^(UITableViewCell *cell, id modelObject) {
 													 
 													 UILabel *titleLabel = (UILabel *)[cell.contentView viewWithTag:CELL_TITLE_LABEL_TAG];
 													 UILabel *valueLabel = (UILabel *)[cell.contentView viewWithTag:CELL_VALUE_LABEL_TAG];
-													 UILabel *limitLabel = (UILabel *)[cell.contentView viewWithTag:CELL_ALT_VALUE_LABEL];
+//													 UILabel *limitLabel = (UILabel *)[cell.contentView viewWithTag:CELL_ALT_VALUE_LABEL];
 													 NSNumber *value = self.greenhouseValues[modelObject];
-													 NSNumber *thresholdValue = self.greenhouseValues[VENTING_NECESS_THRESHOLD_CHARACTERISTIC_UUID];
+//													 NSNumber *thresholdValue = self.greenhouseValues[VENTING_NECESS_THRESHOLD_CHARACTERISTIC_UUID];
 													 
 													 // Configure Cell
 													 titleLabel.text = NSLocalizedString(@"Venting Necessity", @"Cell title label");
 													 valueLabel.text = [_floatFormatter stringForObjectValue:value];
-													 limitLabel.text = [NSString stringWithFormat:@"(%@ max)", [_floatFormatter stringForObjectValue:thresholdValue]];
-												 };
-												 rowDescriptor;
-											 }),
-											 ({
-												 TableRowDescriptor *rowDescriptor = [TableRowDescriptor new];
-												 rowDescriptor.cellReuseIdentifier = @"LabelCell";
-												 rowDescriptor.modelObject = VENTING_NECESS_TARGET_CHARACTERISTIC_UUID;
-												 rowDescriptor.configureCellFromModelBlock = ^(UITableViewCell *cell, id modelObject) {
-													 
-													 UILabel *titleLabel = (UILabel *)[cell.contentView viewWithTag:CELL_TITLE_LABEL_TAG];
-													 UILabel *valueLabel = (UILabel *)[cell.contentView viewWithTag:CELL_VALUE_LABEL_TAG];
-													 NSNumber *value = self.greenhouseValues[modelObject];
-													 
-													 // Configure Cell
-													 titleLabel.text = NSLocalizedString(@"Venting Necessity Target", @"Cell title label");
-													 valueLabel.text = [_floatFormatter stringForObjectValue:value];
-												 };
-												 rowDescriptor;
-											 }),
-											 ({
-												 TableRowDescriptor *rowDescriptor = [TableRowDescriptor new];
-												 rowDescriptor.cellReuseIdentifier = @"LabelCell";
-												 rowDescriptor.modelObject = CONTROL_STATE_CHARACTERISTIC_UUID;
-												 rowDescriptor.configureCellFromModelBlock = ^(UITableViewCell *cell, id modelObject) {
-													 
-													 UILabel *titleLabel = (UILabel *)[cell.contentView viewWithTag:CELL_TITLE_LABEL_TAG];
-													 UILabel *valueLabel = (UILabel *)[cell.contentView viewWithTag:CELL_VALUE_LABEL_TAG];
-													 NSNumber *value = self.greenhouseValues[modelObject];
-													 
-													 // Configure Cell
-													 titleLabel.text = NSLocalizedString(@"Control State", @"Cell title label");
-													 NSString *stateLabel = @"---";
-													 
-													 if (value) switch (value.integerValue) {
-														 case ClimateStateSteady: stateLabel = NSLocalizedString(@"Steady", @"Cell value label"); break;
-														 case ClimateStateDecreasingHumidity: stateLabel = NSLocalizedString(@"Lowering Humidity", @"Cell value label"); break;
-														 default: stateLabel = @"---"; break;
-													 }
-													 valueLabel.text = stateLabel;
+//													 limitLabel.text = [NSString stringWithFormat:@"(%@ max)", [_floatFormatter stringForObjectValue:thresholdValue]];
 												 };
 												 rowDescriptor;
 											 })
@@ -184,13 +145,13 @@ typedef NS_ENUM(UInt8, ClimateState) {
 																		 }),
 																		 ({
 																			 TableRowDescriptor *rowDescriptor = [TableRowDescriptor new];
-																			 rowDescriptor.cellReuseIdentifier = @"DualLabelCell";
+																			 rowDescriptor.cellReuseIdentifier = @"LabelCell";
 																			 rowDescriptor.modelObject = INTERIOR_HUMIDITY_CHARACTERISTIC_UUID;
 																			 rowDescriptor.configureCellFromModelBlock = ^(UITableViewCell *cell, id modelObject) {
 																				 
 																				 UILabel *titleLabel = (UILabel *)[cell.contentView viewWithTag:CELL_TITLE_LABEL_TAG];
 																				 UILabel *valueLabel = (UILabel *)[cell.contentView viewWithTag:CELL_VALUE_LABEL_TAG];
-																				 UILabel *limitLabel = (UILabel *)[cell.contentView viewWithTag:CELL_ALT_VALUE_LABEL];
+//																				 UILabel *limitLabel = (UILabel *)[cell.contentView viewWithTag:CELL_ALT_VALUE_LABEL];
 																				 NSNumber *value = self.greenhouseValues[modelObject];
 																				 
 																				 
@@ -198,7 +159,7 @@ typedef NS_ENUM(UInt8, ClimateState) {
 																				 // Configure Cell
 																				 titleLabel.text = NSLocalizedString(@"Interior Humidity", @"Cell title label");
 																				 valueLabel.text = [_humidityFormatter stringForObjectValue:value];
-																				 limitLabel.text = [NSString stringWithFormat:@"(%@ max)", [_humidityFormatter stringForObjectValue:[self maxAllowedHumidity]]];
+//																				 limitLabel.text = [NSString stringWithFormat:@"(%@ max)", [_humidityFormatter stringForObjectValue:[self maxAllowedHumidity]]];
 																			 };
 																			 rowDescriptor;
 																		 }),
@@ -221,39 +182,23 @@ typedef NS_ENUM(UInt8, ClimateState) {
 																		 }),
 																		 ({
 																			 TableRowDescriptor *rowDescriptor = [TableRowDescriptor new];
-																			 rowDescriptor.cellReuseIdentifier = @"DualLabelCell";
+																			 rowDescriptor.cellReuseIdentifier = @"LabelCell";
 																			 rowDescriptor.modelObject = INTERIOR_TEMPERATURE_CHARACTERISTIC_UUID;
 																			 rowDescriptor.configureCellFromModelBlock = ^(UITableViewCell *cell, id modelObject) {
 																				 
 																				 UILabel *titleLabel = (UILabel *)[cell.contentView viewWithTag:CELL_TITLE_LABEL_TAG];
 																				 UILabel *valueLabel = (UILabel *)[cell.contentView viewWithTag:CELL_VALUE_LABEL_TAG];
-																				 UILabel *limitLabel = (UILabel *)[cell.contentView viewWithTag:CELL_ALT_VALUE_LABEL];
+//																				 UILabel *limitLabel = (UILabel *)[cell.contentView viewWithTag:CELL_ALT_VALUE_LABEL];
 																				 
 																				 NSNumber *celciusValue = self.greenhouseValues[modelObject];
 																				 NSNumber *fahrenheitValue = [[NSValueTransformer valueTransformerForName:@"CelciusToFahrenheitTransformer"] transformedValue:celciusValue];
 																				 
-																				 NSNumber *fahrenheitMaxValue = [[NSValueTransformer valueTransformerForName:@"CelciusToFahrenheitTransformer"] transformedValue:[self maxAllowedTemperature]];
+//																				 NSNumber *fahrenheitMaxValue = [[NSValueTransformer valueTransformerForName:@"CelciusToFahrenheitTransformer"] transformedValue:[self maxAllowedTemperature]];
 																				 
 																				 // Configure Cell
 																				 titleLabel.text = NSLocalizedString(@"Interior Temperature", @"Cell title label");
 																				 valueLabel.text = [_temperatureFormatter stringForObjectValue:fahrenheitValue];
-																				 limitLabel.text = [NSString stringWithFormat:@"(%@ max)", [_temperatureFormatter stringForObjectValue:fahrenheitMaxValue]];
-																			 };
-																			 rowDescriptor;
-																		 }),
-																		 ({
-																			 TableRowDescriptor *rowDescriptor = [TableRowDescriptor new];
-																			 rowDescriptor.cellReuseIdentifier = @"LabelCell";
-																			 rowDescriptor.modelObject = PEAK_HUMIDITY_RISE_CHARACTERISTIC_UUID;
-																			 rowDescriptor.configureCellFromModelBlock = ^(UITableViewCell *cell, id modelObject) {
-																				 
-																				 UILabel *titleLabel = (UILabel *)[cell.contentView viewWithTag:CELL_TITLE_LABEL_TAG];
-																				 UILabel *valueLabel = (UILabel *)[cell.contentView viewWithTag:CELL_VALUE_LABEL_TAG];
-																				 NSNumber *value = self.greenhouseValues[modelObject];
-																				 
-																				 // Configure Cell
-																				 titleLabel.text = NSLocalizedString(@"Peak Humidity Rise", @"Cell title label");
-																				 valueLabel.text = [NSString stringWithFormat:@"%@ / min", [_humidityFormatter stringForObjectValue:value]];
+//																				 limitLabel.text = [NSString stringWithFormat:@"(%@ max)", [_temperatureFormatter stringForObjectValue:fahrenheitMaxValue]];
 																			 };
 																			 rowDescriptor;
 																		 })
@@ -267,19 +212,22 @@ typedef NS_ENUM(UInt8, ClimateState) {
 									sectionDescriptor.rowDescriptors = @[
 																		 ({
 																			 TableRowDescriptor *rowDescriptor = [TableRowDescriptor new];
-																			 rowDescriptor.cellReuseIdentifier = @"SwitchCell";
+																			 rowDescriptor.cellReuseIdentifier = @"LabelCell";
 																			 rowDescriptor.modelObject = VENT_FLAP_CHARACTERISTIC_UUID;
 																			 rowDescriptor.configureCellFromModelBlock = ^(UITableViewCell *cell, id modelObject) {
 																				 
 																				 UILabel *titleLabel = (UILabel *)[cell.contentView viewWithTag:CELL_TITLE_LABEL_TAG];
 																				 UILabel *valueLabel = (UILabel *)[cell.contentView viewWithTag:CELL_VALUE_LABEL_TAG];
-																				 UISwitch *aSwitch = (UISwitch *)[cell.contentView viewWithTag:CELL_SWITCH_TAG];
+//																				 UISwitch *aSwitch = (UISwitch *)[cell.contentView viewWithTag:CELL_SWITCH_TAG];
 																				 NSNumber *value = self.greenhouseValues[modelObject];
 																				 
+																				 CGFloat valueRange = VENT_DOOR_CLOSED - VENT_DOOR_OPEN;
+																				 CGFloat openPercent = 100 * ((VENT_DOOR_CLOSED - value.floatValue) / valueRange);
+																				 
 																				 // Configure Cell
-																				 titleLabel.text = NSLocalizedString(@"Vent Flap Open", @"Cell title label");
-																				 valueLabel.text = [NSString stringWithFormat:@"%d", (int) value.integerValue];
-																				 aSwitch.on = (value.integerValue == VENT_FLAP_OPEN);
+																				 titleLabel.text = NSLocalizedString(@"Vent Flap Opening", @"Cell title label");
+																				 valueLabel.text = [_humidityFormatter stringFromNumber:@(openPercent)];
+//																				 aSwitch.on = (value.integerValue == VENT_FLAP_OPEN);
 																				 
 																			 };
 //																			 rowDescriptor.updateModelFromCellBlock = ^(UITableViewCell *cell, id modelObject) {
@@ -564,70 +512,6 @@ typedef NS_ENUM(UInt8, ClimateState) {
 																				 _floatFormatter.minimumFractionDigits = 2;
 																				 valueLabel.text = [_floatFormatter stringForObjectValue:value];
 																				 _floatFormatter.minimumFractionDigits = origValue;
-																			 };
-																			 rowDescriptor.updateModelFromCellBlock = ^(UITableViewCell *cell, id modelObject) {
-																				 
-																				 
-																				 UISlider *slider = (UISlider *)[cell.contentView viewWithTag:CELL_SLIDER_TAG];
-																				 [self.greenhouseValues setValue:@(slider.value) forKey:modelObject];
-																			 };
-																			 rowDescriptor;
-																		 }),
-																		 ({
-																			 TableRowDescriptor *rowDescriptor = [TableRowDescriptor new];
-																			 rowDescriptor.cellReuseIdentifier = @"SliderCell";
-																			 rowDescriptor.modelObject = VENTING_NECESS_THRESHOLD_CHARACTERISTIC_UUID;
-																			 rowDescriptor.configureCellFromModelBlock = ^(UITableViewCell *cell, id modelObject) {
-																				 
-																				 UILabel *titleLabel = (UILabel *)[cell.contentView viewWithTag:CELL_TITLE_LABEL_TAG];
-																				 UILabel *valueLabel = (UILabel *)[cell.contentView viewWithTag:CELL_VALUE_LABEL_TAG];
-																				 UISlider *slider = (UISlider *)[cell.contentView viewWithTag:CELL_SLIDER_TAG];
-																				 //
-																				 NSNumber *value = self.greenhouseValues[modelObject];
-																				 
-																				 // Configure Cell
-																				 titleLabel.text = NSLocalizedString(@"Venting Threshold", @"Cell title label");
-																				 
-																				 slider.maximumValue = NECESSITY_THRESHOLD_MAX;
-																				 slider.minimumValue = NECESSITY_THRESHOLD_MIN;
-																				 [slider setValue:value.floatValue animated:NO];
-																				 
-																				 NSUInteger origValue = _floatFormatter.minimumFractionDigits;
-																				 _floatFormatter.minimumFractionDigits = 2;
-																				 valueLabel.text = [_floatFormatter stringForObjectValue:value];
-																				 _floatFormatter.minimumFractionDigits = origValue;
-																			 };
-																			 rowDescriptor.updateModelFromCellBlock = ^(UITableViewCell *cell, id modelObject) {
-																				 
-																				 
-																				 UISlider *slider = (UISlider *)[cell.contentView viewWithTag:CELL_SLIDER_TAG];
-																				 [self.greenhouseValues setValue:@(slider.value) forKey:modelObject];
-																			 };
-																			 rowDescriptor;
-																		 }),
-																		 ({
-																			 TableRowDescriptor *rowDescriptor = [TableRowDescriptor new];
-																			 rowDescriptor.cellReuseIdentifier = @"SliderCell";
-																			 rowDescriptor.modelObject = VENT_NECESS_OVERSHOOT_CHARACTERISTIC_UUID;
-																			 rowDescriptor.configureCellFromModelBlock = ^(UITableViewCell *cell, id modelObject) {
-																				 
-																				 UILabel *titleLabel = (UILabel *)[cell.contentView viewWithTag:CELL_TITLE_LABEL_TAG];
-																				 UILabel *valueLabel = (UILabel *)[cell.contentView viewWithTag:CELL_VALUE_LABEL_TAG];
-																				 UISlider *slider = (UISlider *)[cell.contentView viewWithTag:CELL_SLIDER_TAG];
-																				 //
-																				 NSNumber *value = self.greenhouseValues[modelObject];
-																				 
-																				 // Configure Cell
-																				 titleLabel.text = NSLocalizedString(@"Venting Overshoot", @"Cell title label");
-																				 
-																				 slider.maximumValue = VENTING_OVERSHOOT_MAX;
-																				 slider.minimumValue = VENTING_OVERSHOOT_MIN;
-																				 [slider setValue:value.floatValue animated:NO];
-																				 
-																				 NSUInteger origValue = _humidityFormatter.maximumFractionDigits;
-																				 _humidityFormatter.maximumFractionDigits = 0;
-																				 valueLabel.text = [_humidityFormatter stringForObjectValue:value];
-																				 _humidityFormatter.maximumFractionDigits = origValue;
 																			 };
 																			 rowDescriptor.updateModelFromCellBlock = ^(UITableViewCell *cell, id modelObject) {
 																				 

@@ -21,8 +21,8 @@
 #include "services.h"
 #include "lib_ble.h"
 #include "lib_hih6100.h"
-#include "lib_fsm.h"
-#include "lib_timeSeries.h"
+//#include "lib_fsm.h"
+//#include "lib_timeSeries.h"
 
 
 // USER-CONFIGURABLE VARIABLES
@@ -33,16 +33,7 @@ UserConfig currentConfig;
 // -------------------------------------------------
 
 // Bluetooth Low Energy (BLE)
-BLE BLE_board(handleACIEvent);
-
-// Finite State Machines
-FiniteStateMachine climateStateMachine(5, stateWillChange, stateDidChange);  // Receives # of states to support
-
-// TimeSeries storage
-TimeSeries humiditySeries;
-TimeSeries humidityChangeSeries;
-float maxHumidityChangeThisCycle = UNAVAILABLE_f;
-float peakHumidityChange = UNAVAILABLE_f;
+BLE BLE_board(handleACIEvent);  // Configure BLE instance with callback function
 
 // PID control
 boolean hasInitialData = false;
@@ -85,11 +76,7 @@ void setup (void) {
 //  wdt_enable(WDTO_4S);
 
 // Configure Bluetooth LE support
-//  setACIPostEventHandler(handleACIEvent);
   BLE_board.ble_setup();
-  
-  // Configure State Machine
-  setupClimateStateMachine();
 
   // Configure support for Honeywell sensors
   setupHoneywellSensors();
@@ -142,108 +129,7 @@ void detectHungLoop() {
   }  // else do nothing, everything's peachy
 }
 
-// CLIMATE STATE MACHINE CALLBACKS
-// ----------------------------------------------------
-void stateWillChange(uint8_t fromState, uint8_t toState) {
-  
-  switch (fromState) {  // WILL LEAVE...
-    
-    case ClimateStateSteady: {
-      
-      humiditySeries.clearAll();
-      humidityChangeSeries.clearAll();
-      
-      // Copy max last cycle to peak in case it didn't exceed previous peak
-      peakHumidityChange = maxHumidityChangeThisCycle;
-      maxHumidityChangeThisCycle = 0;
-      
-      BLE_board.setValueForCharacteristic(PIPE_GREENHOUSE_MEASUREMENTS_PEAK_HUMIDITY_RISE_SET, peakHumidityChange);
-      BLE_board.notifyClientOfValueForCharacteristic(PIPE_GREENHOUSE_MEASUREMENTS_PEAK_HUMIDITY_RISE_TX, peakHumidityChange);
-      
-//      Serial.print("Gaining ");
-//      Serial.print(peakHumidityChange);
-//      Serial.println(" % RH/min");
- 
-      break;
-    }
-  }
-}
 
-void stateDidChange(uint8_t fromState, uint8_t toState) {
-  
-  // Send current state to BLE board
-  BLE_board.setValueForCharacteristic(PIPE_GREENHOUSE_STATE_CLIMATE_CONTROL_STATE_SET, (uint8_t) toState);
-  BLE_board.notifyClientOfValueForCharacteristic(PIPE_GREENHOUSE_STATE_CLIMATE_CONTROL_STATE_TX, (uint8_t) toState);
-  
-  switch (fromState) {  // DID LEAVE...
-    
-    case ClimateStateSteady: {
-      
-      didLeaveSteadyState(fromState, toState);
-      break;
-    }
-    
-    case ClimateStateDecreasingHumidity: {
-      
-      didLeaveDecreasingHumidityState(fromState, toState);
-      break;
-    }
-  }  // end switch(fromState)
-  
-  
-  switch (toState) {  // DID ENTER...
-    
-    case ClimateStateSteady: {
-      
-      didEnterSteadyState(fromState, toState);
-      break;
-    }
-    
-    case ClimateStateDecreasingHumidity: {
-      
-      didEnterDecreasingHumidityState(fromState, toState);
-      break;
-    }
-  }  // end switch(toState)
-  
-}
-
-// -----------------------------------------------------------------
-
-void didEnterSteadyState(uint8_t fromState, uint8_t toState) {
-  
-  ventDoorServo.write(VENT_DOOR_CLOSED);
-  
-  BLE_board.setValueForCharacteristic(PIPE_GREENHOUSE_CONTROLS_VENT_SERVO_POSITION_SET, (uint8_t) ventDoorServo.read());
-  BLE_board.notifyClientOfValueForCharacteristic(PIPE_GREENHOUSE_CONTROLS_VENT_SERVO_POSITION_TX, (uint8_t) ventDoorServo.read());
-  
-  currentConfig.targetVentingNecessity = UNAVAILABLE_f;
-  
-  BLE_board.setValueForCharacteristic(PIPE_GREENHOUSE_STATE_VENTING_NECESSITY_TARGET_SET, currentConfig.targetVentingNecessity);
-  BLE_board.notifyClientOfValueForCharacteristic(PIPE_GREENHOUSE_STATE_VENTING_NECESSITY_TARGET_TX, currentConfig.targetVentingNecessity);
-}
-
-void didLeaveSteadyState(uint8_t fromState, uint8_t toState) {
-  
-  // NO-OP
-}
-
-void didEnterDecreasingHumidityState(uint8_t fromState, uint8_t toState) {
-  
-  ventDoorServo.write(VENT_DOOR_OPEN);
-  
-  BLE_board.setValueForCharacteristic(PIPE_GREENHOUSE_CONTROLS_VENT_SERVO_POSITION_SET, (uint8_t) ventDoorServo.read());
-  BLE_board.notifyClientOfValueForCharacteristic(PIPE_GREENHOUSE_CONTROLS_VENT_SERVO_POSITION_TX, (uint8_t) ventDoorServo.read());
-}
-
-void didLeaveDecreasingHumidityState(uint8_t fromState, uint8_t toState) {
-  
-  ventDoorServo.write(VENT_DOOR_CLOSED);
-  
-  BLE_board.setValueForCharacteristic(PIPE_GREENHOUSE_CONTROLS_VENT_SERVO_POSITION_SET, (uint8_t) ventDoorServo.read());
-  BLE_board.notifyClientOfValueForCharacteristic(PIPE_GREENHOUSE_CONTROLS_VENT_SERVO_POSITION_TX, (uint8_t) ventDoorServo.read());
-  
-}
 
 // BREAKOUT
 // ----------------------------------------------------
@@ -259,38 +145,18 @@ void updateBluetoothReadPipes() {
   BLE_board.setValueForCharacteristic(PIPE_GREENHOUSE_USER_ADJUSTMENTS_HUMIDITY_SETPOINT_SET, currentConfig.humiditySetpoint);
   BLE_board.setValueForCharacteristic(PIPE_GREENHOUSE_USER_ADJUSTMENTS_HUMIDITY_NECESSITY_COEFF_SET, currentConfig.humidityNecessityCoeff);
   BLE_board.setValueForCharacteristic(PIPE_GREENHOUSE_USER_ADJUSTMENTS_TEMPERATURE_NECESSITY_COEFF_SET, currentConfig.temperatureNecessityCoeff);
-  BLE_board.setValueForCharacteristic(PIPE_GREENHOUSE_USER_ADJUSTMENTS_VENTING_NECESSITY_THRESHOLD_SET, currentConfig.ventingNecessityThreshold);
-  BLE_board.setValueForCharacteristic(PIPE_GREENHOUSE_USER_ADJUSTMENTS_VENTING_NECESSITY_OVERSHOOT_SET, currentConfig.ventingNecessityOvershoot);
   BLE_board.setValueForCharacteristic(PIPE_GREENHOUSE_USER_ADJUSTMENTS_ILLUMINATION_ON_TIME_SET, currentConfig.illuminationOnMinutes);
   BLE_board.setValueForCharacteristic(PIPE_GREENHOUSE_USER_ADJUSTMENTS_ILLUMINATION_OFF_TIME_SET, currentConfig.illuminationOffMinutes);
   
   // Climate Control State
-//  BLE_board.setValueForCharacteristic(PIPE_GREENHOUSE_STATE_VENTING_NECESSITY_SET, 0);
-  BLE_board.setValueForCharacteristic(PIPE_GREENHOUSE_STATE_VENTING_NECESSITY_TARGET_SET, currentConfig.targetVentingNecessity);
-  BLE_board.setValueForCharacteristic(PIPE_GREENHOUSE_STATE_CLIMATE_CONTROL_STATE_SET, (uint8_t) climateStateMachine.getCurrentState());
 //  BLE_board.setValueForCharacteristic(PIPE_GREENHOUSE_STATE_SHIFT_REGISTER_STATE_SET, shiftRegisterState);
   
   // Controls
   BLE_board.setValueForCharacteristic(PIPE_GREENHOUSE_CONTROLS_LIGHT_BANK_1_DUTY_CYCLE_SET, (uint8_t) lightBank1DutyCycle);
-//  BLE_board.setValueForCharacteristic(PIPE_GREENHOUSE_CONTROLS_LIGHT_BANK_2_DUTY_CYCLE_SET, (uint8_t) lightBank2DutyCycle);
   BLE_board.setValueForCharacteristic(PIPE_GREENHOUSE_CONTROLS_VENT_SERVO_POSITION_SET, (uint8_t) ventDoorServo.read());
   
   // Measurements
-//  BLE_board.setValueForCharacteristic(PIPE_GREENHOUSE_MEASUREMENTS_EXTERIOR_HUMIDITY_SET, shiftRegisterState);
-//  BLE_board.setValueForCharacteristic(PIPE_GREENHOUSE_MEASUREMENTS_EXTERIOR_TEMPERATURE_SET, shiftRegisterState);
-//  BLE_board.setValueForCharacteristic(PIPE_GREENHOUSE_MEASUREMENTS_INTERIOR_HUMIDITY_SET, shiftRegisterState);
-//  BLE_board.setValueForCharacteristic(PIPE_GREENHOUSE_MEASUREMENTS_INTERIOR_TEMPERATURE_SET, shiftRegisterState);
-  BLE_board.setValueForCharacteristic(PIPE_GREENHOUSE_MEASUREMENTS_PEAK_HUMIDITY_RISE_SET, peakHumidityChange);
-}
-
-void setupClimateStateMachine() {
-  
-  // NOTE: Still need to figure out how to handle cases where handler fn isn't set without crashing!!!
-  
-  climateStateMachine.setCanTransition(ClimateStateSteady, ClimateStateDecreasingHumidity, true);
-  climateStateMachine.setCanTransition(ClimateStateDecreasingHumidity, ClimateStateSteady, true);
-    
-  climateStateMachine.initialize();
+  // NOTE: Set when measured
 }
 
 void setupHoneywellSensors() {
@@ -356,6 +222,9 @@ void analyzeSystemState() {
     
     ventDoorServo.write(ventFlapPosition);
     
+    BLE_board.setValueForCharacteristic(PIPE_GREENHOUSE_CONTROLS_VENT_SERVO_POSITION_SET, (uint8_t) ventDoorServo.read());
+    BLE_board.notifyClientOfValueForCharacteristic(PIPE_GREENHOUSE_CONTROLS_VENT_SERVO_POSITION_TX, (uint8_t) ventDoorServo.read());
+    
   } else {
     
     hasInitialData = true;
@@ -367,74 +236,6 @@ void analyzeSystemState() {
     ventFlapPID.SetOutputLimits(VENT_DOOR_OPEN, VENT_DOOR_CLOSED);  // (min, max)
     ventFlapPID.SetMode(AUTOMATIC);
   }
-  
-  
-  /*
-  // Determine if we need to change states
-  switch ( climateStateMachine.getCurrentState() ) {
-    
-    case ClimateStateSteady: {
-      
-      // Perform timeseries analysis
-      humiditySeries.addValue(interiorHoneywell.humidity);
-      
-      float slope = humiditySeries.averageSlope();
-      if (slope != UNAVAILABLE_f) {
-        
-        float percentPerMinute = slope * 60.0;  // Scale %-per-second to minutes
-        humidityChangeSeries.addValue(percentPerMinute);
-        
-        float rollingAverage = humidityChangeSeries.averageValue();
-        if (rollingAverage > maxHumidityChangeThisCycle) {
-          
-          maxHumidityChangeThisCycle = rollingAverage;
-        }
-        
-        if (rollingAverage > peakHumidityChange) {  // Update immediately if current rolling average > peak
-          
-          peakHumidityChange = rollingAverage;
-          
-          BLE_board.setValueForCharacteristic(PIPE_GREENHOUSE_MEASUREMENTS_PEAK_HUMIDITY_RISE_SET, peakHumidityChange);
-          BLE_board.notifyClientOfValueForCharacteristic(PIPE_GREENHOUSE_MEASUREMENTS_PEAK_HUMIDITY_RISE_TX, peakHumidityChange);
-        }
-      
-      } else {  // No slope info available
-        
-        BLE_board.setValueForCharacteristic(PIPE_GREENHOUSE_MEASUREMENTS_PEAK_HUMIDITY_RISE_SET, UNAVAILABLE_f);
-        BLE_board.notifyClientOfValueForCharacteristic(PIPE_GREENHOUSE_MEASUREMENTS_PEAK_HUMIDITY_RISE_TX, UNAVAILABLE_f);
-      }
-      
-      // Trigger state change when venting necessity exceeds threshold
-      if (ventingNecessity >= currentConfig.ventingNecessityThreshold) {  // Trigger right at the threshold
-        
-        climateStateMachine.transitionToState(ClimateStateDecreasingHumidity);
-      }
-      
-      break;
-    }
-    
-    case ClimateStateDecreasingHumidity: {
-      
-      currentConfig.targetVentingNecessity = (currentConfig.ventingNecessityThreshold * (1 - (currentConfig.ventingNecessityOvershoot / 100.0)));
-      
-      BLE_board.setValueForCharacteristic(PIPE_GREENHOUSE_STATE_VENTING_NECESSITY_TARGET_SET, currentConfig.targetVentingNecessity);
-      BLE_board.notifyClientOfValueForCharacteristic(PIPE_GREENHOUSE_STATE_VENTING_NECESSITY_TARGET_TX, currentConfig.targetVentingNecessity);
-      
-      if (ventingNecessity <= currentConfig.targetVentingNecessity) {  // Trigger only when we reach the lower target
-        
-        climateStateMachine.transitionToState(ClimateStateSteady);
-      }
-      
-      break;
-    }
-    
-    default: {
-      
-      climateStateMachine.transitionToState(ClimateStateSteady);
-      
-      break;
-    }
-  }*/
 }
 
 void checkIlluminationTimer() {
@@ -480,6 +281,7 @@ void checkIlluminationTimer() {
   BLE_board.setValueForCharacteristic(PIPE_GREENHOUSE_CONTROLS_LIGHT_BANK_1_DUTY_CYCLE_SET, (uint8_t) lightBank1DutyCycle);
   BLE_board.notifyClientOfValueForCharacteristic(PIPE_GREENHOUSE_CONTROLS_LIGHT_BANK_1_DUTY_CYCLE_TX, (uint8_t) lightBank1DutyCycle);
   
+  // NOTE: Not bothering to send bank 2 status separately since they alreays get changed together
 //  BLE_board.setValueForCharacteristic(PIPE_GREENHOUSE_CONTROLS_LIGHT_BANK_2_DUTY_CYCLE_SET, (uint8_t) lightBank2DutyCycle);
 //  BLE_board.notifyClientOfValueForCharacteristic(PIPE_GREENHOUSE_CONTROLS_LIGHT_BANK_2_DUTY_CYCLE_TX, (uint8_t) lightBank2DutyCycle);
 }
@@ -644,38 +446,6 @@ boolean receivedDataFromPipe(uint8_t *bytes, uint8_t byteCount, uint8_t pipe) {
       break;
     }
     
-    case PIPE_GREENHOUSE_USER_ADJUSTMENTS_VENTING_NECESSITY_THRESHOLD_RX_ACK_AUTO: {
-      
-      if (byteCount == PIPE_GREENHOUSE_USER_ADJUSTMENTS_VENTING_NECESSITY_THRESHOLD_RX_ACK_AUTO_MAX_SIZE) {
-      
-        float floatValue = *((float *)bytes);
-        if ( valueWithinLimits(floatValue, NECESSITY_THRESHOLD_MIN, NECESSITY_THRESHOLD_MAX) ) {
-          
-          currentConfig.ventingNecessityThreshold = floatValue;
-          persistConfiguration();
-          
-          BLE_board.setValueForCharacteristic(PIPE_GREENHOUSE_USER_ADJUSTMENTS_VENTING_NECESSITY_THRESHOLD_SET, floatValue); 
-        }
-      }
-      break;
-    }
-    
-    case PIPE_GREENHOUSE_USER_ADJUSTMENTS_VENTING_NECESSITY_OVERSHOOT_RX_ACK_AUTO: {
-      
-      if (byteCount == PIPE_GREENHOUSE_USER_ADJUSTMENTS_VENTING_NECESSITY_OVERSHOOT_RX_ACK_AUTO_MAX_SIZE) {
-      
-        float floatValue = *((float *)bytes);
-        if ( valueWithinLimits(floatValue, VENTING_OVERSHOOT_MIN, VENTING_OVERSHOOT_MAX) ) {
-          
-          currentConfig.ventingNecessityOvershoot = floatValue;
-          persistConfiguration();
-          
-          BLE_board.setValueForCharacteristic(PIPE_GREENHOUSE_USER_ADJUSTMENTS_VENTING_NECESSITY_OVERSHOOT_SET, floatValue); 
-        }
-      }
-      break;
-    }
-    
     case PIPE_GREENHOUSE_USER_ADJUSTMENTS_DATETIME_RX_ACK_AUTO: {
       
       if (byteCount == PIPE_GREENHOUSE_USER_ADJUSTMENTS_DATETIME_RX_ACK_AUTO_MAX_SIZE) {
@@ -774,17 +544,13 @@ void restoreConfiguration(void) {
       
       Serial.println(F("No stored config found.  Setting defaults"));
       
-      currentConfig.magicNumber = 17;
+      currentConfig.magicNumber = 18;
       
       currentConfig.humiditySetpoint = 30.0f;
       currentConfig.humidityNecessityCoeff = 1.0;  // Unit-less, coefficient for balancing humidity needs with temperature needs
       
       currentConfig.temperatureSetpoint = 21.0f;
       currentConfig.temperatureNecessityCoeff = 0.75;  // Unit-less, coefficient for balancing humidity needs with temperature needs
-      
-      currentConfig.ventingNecessityThreshold = 8.0f;  // Unit-less, takes into account balancing humidity and temperature setpoint targets
-      currentConfig.ventingNecessityOvershoot = 25.0f;  // Percent of ventingNecessityThreshold to overshoot by to reduce frequency of cycling
-      currentConfig.targetVentingNecessity = UNAVAILABLE_f;  // Venting necessity value at which to stop venting
       
       currentConfig.illuminationOnMinutes = UNAVAILABLE_u;  // Stored as minutes since 12:00AM
       currentConfig.illuminationOffMinutes = UNAVAILABLE_u;  // Stored as minutes since 12:00AM
