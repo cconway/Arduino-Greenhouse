@@ -15,8 +15,7 @@
 #include <Wire.h>
 #include <Servo.h>
 #include <Time.h>
-
-//#include <PID_v1.h>
+#include <PID_v1.h>
 
 #include "constants.h"
 #include "services.h"
@@ -44,6 +43,13 @@ TimeSeries humiditySeries;
 TimeSeries humidityChangeSeries;
 float maxHumidityChangeThisCycle = UNAVAILABLE_f;
 float peakHumidityChange = UNAVAILABLE_f;
+
+// PID control
+boolean hasInitialData = false;
+double ventingNecessity = UNAVAILABLE_f;
+double ventFlapPosition = VENT_DOOR_CLOSED;
+double setpoint = 0;
+PID ventFlapPID(&ventingNecessity, &ventFlapPosition, &setpoint, 2.5, 0.25, 0.5, DIRECT);
 
 // Shift Register
 int shiftRegLatchPin = 4;
@@ -335,12 +341,35 @@ void analyzeSystemState() {
   
   // Example H(i) = 31%, H(o) = 28.5%, H(s) = 30.0, T(i) = 22.3, T(o) = 21.9, T(s) = 23.0
   //    2.22             = ( 1.0                   * 2.5           * 1.0              ) + ( 1.0                      * 0.4              * -0.7                )
-  float ventingNecessity = (currentConfig.humidityNecessityCoeff * humidityDelta * humidityDeviation) + (currentConfig.temperatureNecessityCoeff * temperatureDelta * temperatureDeviation);
+  ventingNecessity = (currentConfig.humidityNecessityCoeff * humidityDelta * humidityDeviation) + (currentConfig.temperatureNecessityCoeff * temperatureDelta * temperatureDeviation);
+  
+  BLE_board.setValueForCharacteristic(PIPE_GREENHOUSE_STATE_VENTING_NECESSITY_SET, (float)ventingNecessity);
+  BLE_board.notifyClientOfValueForCharacteristic(PIPE_GREENHOUSE_STATE_VENTING_NECESSITY_TX, (float)ventingNecessity);
   
   
-  BLE_board.setValueForCharacteristic(PIPE_GREENHOUSE_STATE_VENTING_NECESSITY_SET, ventingNecessity);
-  BLE_board.notifyClientOfValueForCharacteristic(PIPE_GREENHOUSE_STATE_VENTING_NECESSITY_TX, ventingNecessity);
+  // Set Vent Flap servo position based on PID controller
+  if (hasInitialData) {
+    
+    ventFlapPID.Compute();
+//    Serial.print("Servo position = ");
+//    Serial.println(ventFlapPosition);
+    
+    ventDoorServo.write(ventFlapPosition);
+    
+  } else {
+    
+    hasInitialData = true;
+    
+    // Turn the PID on
+    // NOTE: To raise venting necessity you would raise the output value (towards vent flap closure)
+    //   so relationship is 'direct', not 'reverse'
+    ventFlapPID.SetSampleTime(3000);  // 3sec, less than watchdog cycle
+    ventFlapPID.SetOutputLimits(VENT_DOOR_OPEN, VENT_DOOR_CLOSED);  // (min, max)
+    ventFlapPID.SetMode(AUTOMATIC);
+  }
   
+  
+  /*
   // Determine if we need to change states
   switch ( climateStateMachine.getCurrentState() ) {
     
@@ -367,20 +396,15 @@ void analyzeSystemState() {
           
           BLE_board.setValueForCharacteristic(PIPE_GREENHOUSE_MEASUREMENTS_PEAK_HUMIDITY_RISE_SET, peakHumidityChange);
           BLE_board.notifyClientOfValueForCharacteristic(PIPE_GREENHOUSE_MEASUREMENTS_PEAK_HUMIDITY_RISE_TX, peakHumidityChange);
-          
-//          Serial.print("Gaining ");
-//          Serial.print(peakHumidityChange);
-//          Serial.println(" % RH/min");
         }
+      
+      } else {  // No slope info available
         
-//        Serial.print("Gaining ");
-//        Serial.print(rollingAverage);
-//        Serial.print(" % RH/min with ");
-//        Serial.print(humidityChangeSeries.measurementCount);
-//        Serial.println(" measurements");
+        BLE_board.setValueForCharacteristic(PIPE_GREENHOUSE_MEASUREMENTS_PEAK_HUMIDITY_RISE_SET, UNAVAILABLE_f);
+        BLE_board.notifyClientOfValueForCharacteristic(PIPE_GREENHOUSE_MEASUREMENTS_PEAK_HUMIDITY_RISE_TX, UNAVAILABLE_f);
       }
       
-      // 
+      // Trigger state change when venting necessity exceeds threshold
       if (ventingNecessity >= currentConfig.ventingNecessityThreshold) {  // Trigger right at the threshold
         
         climateStateMachine.transitionToState(ClimateStateDecreasingHumidity);
@@ -410,7 +434,7 @@ void analyzeSystemState() {
       
       break;
     }
-  }
+  }*/
 }
 
 void checkIlluminationTimer() {
