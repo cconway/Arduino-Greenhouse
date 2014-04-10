@@ -22,7 +22,7 @@
 #include "lib_ble.h"
 #include "lib_hih6100.h"
 //#include "lib_fsm.h"
-//#include "lib_timeSeries.h"
+#include "lib_timeSeries.h"
 
 
 // USER-CONFIGURABLE VARIABLES
@@ -34,6 +34,9 @@ UserConfig currentConfig;
 
 // Bluetooth Low Energy (BLE)
 BLE BLE_board(handleACIEvent);  // Configure BLE instance with callback function
+
+// Timeseries Statistics
+TimeSeries ventNecessityMeasurements;
 
 // PID control
 boolean hasInitialData = false;
@@ -212,6 +215,11 @@ void analyzeSystemState() {
   BLE_board.setValueForCharacteristic(PIPE_GREENHOUSE_STATE_VENTING_NECESSITY_SET, (float)ventingNecessity);
   BLE_board.notifyClientOfValueForCharacteristic(PIPE_GREENHOUSE_STATE_VENTING_NECESSITY_TX, (float)ventingNecessity);
   
+  // Staticstics
+  ventNecessityMeasurements.addValue(ventingNecessity);
+  
+  BLE_board.setValueForCharacteristic(PIPE_GREENHOUSE_STATE_VENT_NECESSITY_DELTA_SET, ventNecessityMeasurements.averageSlope());
+  BLE_board.notifyClientOfValueForCharacteristic(PIPE_GREENHOUSE_STATE_VENT_NECESSITY_DELTA_TX, ventNecessityMeasurements.averageSlope());
   
   // Set Vent Flap servo position based on PID controller
   if (hasInitialData) {

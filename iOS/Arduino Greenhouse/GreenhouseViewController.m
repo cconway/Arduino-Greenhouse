@@ -102,20 +102,20 @@ typedef NS_ENUM(UInt8, ClimateState) {
 		sectionDescriptor.rowDescriptors = @[
 											 ({
 												 TableRowDescriptor *rowDescriptor = [TableRowDescriptor new];
-												 rowDescriptor.cellReuseIdentifier = @"LabelCell";
+												 rowDescriptor.cellReuseIdentifier = @"DualLabelCell";
 												 rowDescriptor.modelObject = VENTING_NECESSITY_CHARACTERISTIC_UUID;
 												 rowDescriptor.configureCellFromModelBlock = ^(UITableViewCell *cell, id modelObject) {
 													 
 													 UILabel *titleLabel = (UILabel *)[cell.contentView viewWithTag:CELL_TITLE_LABEL_TAG];
 													 UILabel *valueLabel = (UILabel *)[cell.contentView viewWithTag:CELL_VALUE_LABEL_TAG];
-//													 UILabel *limitLabel = (UILabel *)[cell.contentView viewWithTag:CELL_ALT_VALUE_LABEL];
+													 UILabel *limitLabel = (UILabel *)[cell.contentView viewWithTag:CELL_ALT_VALUE_LABEL];
 													 NSNumber *value = self.greenhouseValues[modelObject];
-//													 NSNumber *thresholdValue = self.greenhouseValues[VENTING_NECESS_THRESHOLD_CHARACTERISTIC_UUID];
+													 NSNumber *thresholdValue = self.greenhouseValues[VENTING_NECESSITY_DELTA_CHARACTERISTIC_UUID];
 													 
 													 // Configure Cell
 													 titleLabel.text = NSLocalizedString(@"Venting Necessity", @"Cell title label");
 													 valueLabel.text = [_floatFormatter stringForObjectValue:value];
-//													 limitLabel.text = [NSString stringWithFormat:@"(%@ max)", [_floatFormatter stringForObjectValue:thresholdValue]];
+													 limitLabel.text = [NSString stringWithFormat:@"(∆ %@/sec)", [_floatFormatter stringForObjectValue:thresholdValue]];
 												 };
 												 rowDescriptor;
 											 })
