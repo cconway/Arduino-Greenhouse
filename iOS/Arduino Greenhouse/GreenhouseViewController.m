@@ -108,14 +108,22 @@ typedef NS_ENUM(UInt8, ClimateState) {
 													 
 													 UILabel *titleLabel = (UILabel *)[cell.contentView viewWithTag:CELL_TITLE_LABEL_TAG];
 													 UILabel *valueLabel = (UILabel *)[cell.contentView viewWithTag:CELL_VALUE_LABEL_TAG];
-													 UILabel *limitLabel = (UILabel *)[cell.contentView viewWithTag:CELL_ALT_VALUE_LABEL];
+													 UILabel *auxLabel = (UILabel *)[cell.contentView viewWithTag:CELL_ALT_VALUE_LABEL];
 													 NSNumber *value = self.greenhouseValues[modelObject];
-													 NSNumber *thresholdValue = self.greenhouseValues[VENTING_NECESSITY_DELTA_CHARACTERISTIC_UUID];
+													 NSNumber *valueChangePerSecond = self.greenhouseValues[VENTING_NECESSITY_DELTA_CHARACTERISTIC_UUID];
+													 
+													 NSNumber *valueChangePerMinute = @(valueChangePerSecond.floatValue * 60.0);
+													 
+													 NSUInteger maxFractionDigits = _floatFormatter.maximumFractionDigits;
+													 _floatFormatter.maximumFractionDigits = 0;
 													 
 													 // Configure Cell
 													 titleLabel.text = NSLocalizedString(@"Venting Necessity", @"Cell title label");
 													 valueLabel.text = [_floatFormatter stringForObjectValue:value];
-													 limitLabel.text = [NSString stringWithFormat:@"(∆ %@/sec)", [_floatFormatter stringForObjectValue:thresholdValue]];
+													 auxLabel.text = [NSString stringWithFormat:@"(∆ %@/min)", [_floatFormatter stringForObjectValue:valueChangePerMinute]];
+													 
+													 // Reset
+													 _floatFormatter.maximumFractionDigits = maxFractionDigits;
 												 };
 												 rowDescriptor;
 											 })
